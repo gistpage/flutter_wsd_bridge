@@ -1,9 +1,6 @@
 name: flutter_wsd_bridge
 description: "Flutter package for WSD (Web Service Development) JavaScript bridge integration with WebView. Supports event tracking, SDK integration, and H5 hybrid functionality."
 version: 1.0.0
-homepage: https://github.com.example.flutter_wsd_bridge
-repository: https://github.com.example.flutter_wsd_bridge
-issue_tracker: https://github.com.example.flutter_wsd_bridge/issues
 
 environment:
   sdk: ^3.8.1
@@ -30,6 +27,12 @@ dependencies:
   
   # 日志
   logger: ^2.0.2
+
+  # 远程配置能力，官方用法，低耦合
+  flutter_remote_config:
+    git:
+      url: https://github.com/gistpage/flutter_remote_config.git
+      ref: main
 
 dev_dependencies:
   flutter_test:

@@ -26,6 +26,55 @@
 - **配置驱动开发** - 通过配置控制所有行为
 - **TypeScript 支持** - 完整的类型定义
 
+## 🌐 远程配置能力
+
+> ⚠️ 本插件已内置依赖 [flutter_remote_config](https://github.com/gistpage/flutter_remote_config)，无需手动添加依赖。所有用法、API、配置均以官方文档为准。
+
+### 初始化与使用（官方推荐方式）
+
+```dart
+import 'package:flutter_remote_config/flutter_remote_config.dart';
+
+void main() async {
+  await EasyRemoteConfig.init(
+    gistId: 'your-gist-id', // GitHub Gist ID
+    githubToken: 'your-token', // GitHub Token
+    debugMode: true, // 开发阶段建议开启
+    defaults: {
+      'version': '1',
+      'isRedirectEnabled': false,
+      'redirectUrl': 'https://flutter.dev',
+    },
+  );
+  // 你的业务逻辑...
+}
+```
+
+#### 生产环境配置示例
+
+```dart
+await EasyRemoteConfig.init(
+  gistId: 'your-production-gist-id',
+  githubToken: 'your-production-token',
+  debugMode: false, // 生产环境关闭调试
+  cacheTimeout: 300, // 5分钟缓存
+  networkTimeout: 10, // 10秒网络超时
+);
+```
+
+### 更多用法与详细说明
+
+请参考 [flutter_remote_config 官方文档](https://github.com/gistpage/flutter_remote_config) 获取：
+- 参数说明与初始化细节
+- 配置字段要求与示例
+- 平台兼容性与权限配置
+- 常见问题与最佳实践
+- 组件用法与自动重定向等高级能力
+
+---
+
+> 插件不会对 `flutter_remote_config` 做任何二次封装或魔改，所有能力均以官方为准。你可以直接在项目中使用其全部能力，插件功能与远程配置包互不影响。
+
 ## 🚀 快速开始
 
 ### 安装
