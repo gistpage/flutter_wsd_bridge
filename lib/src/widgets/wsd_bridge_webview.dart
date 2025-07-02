@@ -24,15 +24,25 @@ class WsdBridgeWebView extends StatelessWidget {
         for (final method in JsBridgeManager().getRegisteredMethods()) {
           controller.addJavaScriptHandler(
             handlerName: method,
-            callback: (args) async {
-              final params = args.isNotEmpty ? args[0] : <String, dynamic>{};
-              return await JsBridgeManager().dispatch(method, params);
+            callback: (args) {
+              try {
+                final params = args.isNotEmpty ? args[0] : <String, dynamic>{};
+                debugPrint('[WsdBridgeWebView] JS Handler: method=$method, params=$params');
+                return JsBridgeManager().dispatch(method, params).then((result) {
+                  debugPrint('[WsdBridgeWebView] JS Handler: method=$method, result=$result');
+                  return result;
+                });
+              } catch (e, stack) {
+                debugPrint('[WsdBridgeWebView] JS Handler: method=$method, error=$e, stack=$stack');
+                return {'code': -100, 'data': null, 'msg': 'Handler error: $e'};
+              }
             },
           );
         }
         if (onWebViewCreated != null) {
           onWebViewCreated!(controller);
         }
+        debugPrint('[WsdBridgeWebView] 已注册JS Handler: [36m${JsBridgeManager().getRegisteredMethods()}[0m');
       },
     );
   }

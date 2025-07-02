@@ -54,52 +54,69 @@ class JsBridgeManager {
   void registerDefaultMethods() {
     registerMethod('eventTracker', (params) async {
       print('[JSBridge] eventTracker: params=$params');
-      return {'tracked': true, 'params': params};
+      final result = {'tracked': true, 'params': params};
+      print('[JSBridge] eventTracker: result=$result');
+      return result;
     });
     registerMethod('openWebView', (params) async {
       print('[JSBridge] openWebView: params=$params');
-      return {'opened': true, 'params': params};
+      final result = {'opened': true, 'params': params};
+      print('[JSBridge] openWebView: result=$result');
+      return result;
     });
     registerMethod('openAndroid', (params) async {
       print('[JSBridge] openAndroid: params=$params');
-      return {'opened': true, 'params': params};
+      final result = {'opened': true, 'params': params};
+      print('[JSBridge] openAndroid: result=$result');
+      return result;
     });
     registerMethod('closeWebView', (params) async {
       print('[JSBridge] closeWebView: params=$params');
-      return {'closed': true};
+      final result = {'closed': true};
+      print('[JSBridge] closeWebView: result=$result');
+      return result;
     });
     registerMethod('getUseragent', (params) async {
       print('[JSBridge] getUseragent: params=$params');
-      // mock useragent
-      return {'useragent': 'WSDApp/1.0.0 (FlutterBridge) UUID/123456'};
+      final result = {'useragent': 'WSDApp/1.0.0 (FlutterBridge) UUID/123456'};
+      print('[JSBridge] getUseragent: result=$result');
+      return result;
     });
     registerMethod('googleLogin', (params) async {
       print('[JSBridge] googleLogin: params=$params');
-      // mock callback
-      return {'idToken': 'mock_google_id_token'};
+      final result = {'idToken': 'mock_google_id_token'};
+      print('[JSBridge] googleLogin: result=$result');
+      return result;
     });
     registerMethod('facebookLogin', (params) async {
       print('[JSBridge] facebookLogin: params=$params');
-      // mock callback
-      return {'idToken': 'mock_facebook_id_token'};
+      final result = {'idToken': 'mock_facebook_id_token'};
+      print('[JSBridge] facebookLogin: result=$result');
+      return result;
     });
     registerMethod('getFcmToken', (params) async {
       print('[JSBridge] getFcmToken: params=$params');
-      // mock callback
-      return {'fcmToken': 'mock_fcm_token'};
+      final result = {'fcmToken': 'mock_fcm_token'};
+      print('[JSBridge] getFcmToken: result=$result');
+      return result;
     });
     registerMethod('alert', (params) async {
       print('[JSBridge] alert: params=$params');
-      // mock alert
-      return {'alerted': true, 'message': params['message']};
+      final result = {'alerted': true, 'message': params['message']};
+      print('[JSBridge] alert: result=$result');
+      return result;
     });
     registerMethod('openWindow', (params) async {
       print('[JSBridge] openWindow: params=$params');
-      return {'opened': true, 'url': params['url']};
+      final result = {'opened': true, 'url': params['url']};
+      print('[JSBridge] openWindow: result=$result');
+      return result;
     });
     registerMethod('handleHtmlLink', (params) async {
       print('[JSBridge] handleHtmlLink: params=$params');
-      return {'handled': true, 'url': params['url']};
+      final result = {'handled': true, 'url': params['url']};
+      print('[JSBridge] handleHtmlLink: result=$result');
+      return result;
     });
   }
 
