@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>WSD Bridge H5 测试</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f6fa; }
+    .banner {
+      background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+      color: #fff;
+      padding: 32px 20px 20px 20px;
+      text-align: center;
+      border-bottom-left-radius: 32px;
+      border-bottom-right-radius: 32px;
+      box-shadow: 0 2px 8px rgba(106,17,203,0.08);
+    }
+    .banner h1 { margin: 0 0 8px 0; font-size: 2.2em; letter-spacing: 2px; }
+    .banner p { margin: 0; font-size: 1.1em; opacity: 0.92; }
+    .env-status {
+      margin: 18px auto 0 auto; max-width: 520px; padding: 10px 0; font-size: 1.1em; font-weight: bold;
+      border-radius: 8px; text-align: center;
+    }
+    .env-ok { background: #e6ffed; color: #237804; border: 1px solid #b7eb8f; }
+    .env-fail { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+    .section {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 22px 18px 18px 18px;
+      margin: 28px auto 0 auto;
+      max-width: 520px;
+      border-left: 6px solid #6a11cb;
+      position: relative;
+    }
+    .section h2 {
+      color: #2575fc;
+      margin-top: 0;
+      font-size: 1.25em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section .icon {
+      font-size: 1.3em;
+      margin-right: 4px;
+    }
+    label { display: block; margin-top: 8px; font-weight: 500; }
+    input, textarea {
+      width: 100%; margin-top: 4px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #d0d7e2; padding: 7px 10px; font-size: 1em;
+      background: #f8fafd;
+    }
+    button {
+      margin-top: 8px; padding: 10px 0; width: 100%; border: none; border-radius: 6px; font-size: 1.1em; font-weight: bold;
+      background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); color: #fff; cursor: pointer; box-shadow: 0 1px 4px rgba(106,17,203,0.08);
+      transition: background 0.2s;
+    }
+    button:hover { background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%); }
+    .result-box {
+      background: #f0f7ff;
+      color: #1a237e;
+      border-radius: 6px;
+      border: 1px solid #b3c6e6;
+      margin-top: 8px;
+      padding: 8px 10px;
+      font-size: 15px;
+      min-height: 22px;
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      word-break: break-all;
+    }
+    .tip {
+      background: #fffbe6; color: #b8860b; border-left: 5px solid #ffe066; padding: 10px 14px; border-radius: 8px; margin: 18px auto 0 auto; max-width: 520px;
+      font-size: 1em; font-weight: 500;
+    }
+    @media (max-width: 600px) {
+      .section, .tip, .env-status { max-width: 98vw; }
+      .banner { padding: 24px 4vw 14px 4vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <h1>🧪 WSD Bridge H5 测试</h1>
+    <p>一站式验证 <b>JSBridge</b> 与原生桥接能力，支持 eventTracker、openWebView、参数校验、回调等全流程。<br>请在 App WebView 中访问本页，所有结果实时高亮展示。</p>
+  </div>
+
+  <div id="envStatus" class="env-status">环境检测中...</div>
+
+  <div class="tip">⚡ <b>提示：</b>如需本地联调，请用 <b>http://localhost:8080/bridge_test.html</b> 作为 WebView 地址。</div>
+
+  <div class="section">
+    <h2><span class="icon">📊</span>1. eventTracker 测试</h2>
+    <label>eventName:</label>
+    <input id="eventTrackerName" value="test_event" />
+    <label>eventValue (JSON):</label>
+    <textarea id="eventTrackerValue">{"foo": "bar"}</textarea>
+    <button onclick="callEventTracker()">🚀 调用 eventTracker</button>
+    <div id="result-eventTracker" class="result-box"></div>
+    <button onclick="copyResult('result-eventTracker')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🌐</span>2. openWebView 测试</h2>
+    <label>url:</label>
+    <input id="openWebViewUrl" value="https://flutter.dev" />
+    <label>type (1=外跳, 2=内嵌):</label>
+    <input id="openWebViewType" value="2" />
+    <button onclick="callOpenWebView()">🌟 调用 openWebView</button>
+    <div id="result-openWebView" class="result-box"></div>
+    <button onclick="copyResult('result-openWebView')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🌍</span>3. openAndroid 测试</h2>
+    <label>url:</label>
+    <input id="openAndroidUrl" value="https://www.baidu.com" />
+    <button onclick="callOpenAndroid()">🔗 调用 openAndroid</button>
+    <div id="result-openAndroid" class="result-box"></div>
+    <button onclick="copyResult('result-openAndroid')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">❌</span>4. closeWebView 测试</h2>
+    <button onclick="callCloseWebView()">🛑 调用 closeWebView</button>
+    <div id="result-closeWebView" class="result-box"></div>
+    <button onclick="copyResult('result-closeWebView')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🧑‍💻</span>5. getUseragent 测试</h2>
+    <button onclick="callGetUseragent()">🔍 获取 useragent</button>
+    <div id="result-getUseragent" class="result-box"></div>
+    <button onclick="copyResult('result-getUseragent')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🔑</span>6. googleLogin 测试</h2>
+    <button onclick="callGoogleLogin()">🔑 调用 googleLogin</button>
+    <div id="result-googleLogin" class="result-box"></div>
+    <button onclick="copyResult('result-googleLogin')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🔵</span>7. facebookLogin 测试</h2>
+    <button onclick="callFacebookLogin()">🔵 调用 facebookLogin</button>
+    <div id="result-facebookLogin" class="result-box"></div>
+    <button onclick="copyResult('result-facebookLogin')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📬</span>8. getFcmToken 测试</h2>
+    <button onclick="callGetFcmToken()">📬 调用 getFcmToken</button>
+    <div id="result-getFcmToken" class="result-box"></div>
+    <button onclick="copyResult('result-getFcmToken')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">⚠️</span>9. alert 测试</h2>
+    <label>message:</label>
+    <input id="alertMsg" value="Hello from H5!" />
+    <button onclick="callAlert()">⚠️ 调用 alert</button>
+    <div id="result-alert" class="result-box"></div>
+    <button onclick="copyResult('result-alert')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🌐</span>10. openWindow 测试</h2>
+    <label>url:</label>
+    <input id="openWindowUrl" value="https://www.baidu.com" />
+    <button onclick="callOpenWindow()">🌐 调用 openWindow</button>
+    <div id="result-openWindow" class="result-box"></div>
+    <button onclick="copyResult('result-openWindow')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🔗</span>11. handleHtmlLink 测试</h2>
+    <label>url:</label>
+    <input id="handleHtmlLinkUrl" value="https://www.baidu.com" />
+    <button onclick="callHandleHtmlLink()">🔗 调用 handleHtmlLink</button>
+    <div id="result-handleHtmlLink" class="result-box"></div>
+    <button onclick="copyResult('result-handleHtmlLink')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+  </div>
+
+  <script>
+    // 环境检测
+    function checkBridgeEnv() {
+      var envStatus = document.getElementById('envStatus');
+      if (window.flutter_inappwebview && typeof window.flutter_inappwebview.callHandler === 'function') {
+        envStatus.textContent = '✅ 已检测到桥接环境，可正常调用';
+        envStatus.className = 'env-status env-ok';
+        return true;
+      } else {
+        envStatus.textContent = '❌ 未检测到桥接环境，请在App内WebView中打开';
+        envStatus.className = 'env-status env-fail';
+        return false;
+      }
+    }
+    checkBridgeEnv();
+
+    // eventTracker 测试
+    function callEventTracker() {
+      if (!checkBridgeEnv()) {
+        showResult('result-eventTracker', 'eventTracker', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let eventName = document.getElementById('eventTrackerName').value;
+      let eventValue = safeParse(document.getElementById('eventTrackerValue').value);
+      if (!eventName || !eventValue) return;
+      window.flutter_inappwebview.callHandler('eventTracker', { eventName, eventValue })
+        .then(function(result) {
+          showResult('result-eventTracker', 'eventTracker', { eventName, eventValue }, result);
+        })
+        .catch(function(err) {
+          showResult('result-eventTracker', 'eventTracker', { eventName, eventValue }, '[异常] ' + err);
+        });
+    }
+
+    // openWebView 测试
+    function callOpenWebView() {
+      if (!checkBridgeEnv()) {
+        showResult('result-openWebView', 'openWebView', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let url = document.getElementById('openWebViewUrl').value;
+      let type = parseInt(document.getElementById('openWebViewType').value) || 2;
+      window.flutter_inappwebview.callHandler('openWebView', { url, type })
+        .then(function(result) {
+          showResult('result-openWebView', 'openWebView', { url, type }, result);
+        })
+        .catch(function(err) {
+          showResult('result-openWebView', 'openWebView', { url, type }, '[异常] ' + err);
+        });
+    }
+
+    // openAndroid 测试
+    function callOpenAndroid() {
+      if (!checkBridgeEnv()) {
+        showResult('result-openAndroid', 'openAndroid', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let url = document.getElementById('openAndroidUrl').value;
+      window.flutter_inappwebview.callHandler('openAndroid', { url })
+        .then(function(result) {
+          showResult('result-openAndroid', 'openAndroid', { url }, result);
+        })
+        .catch(function(err) {
+          showResult('result-openAndroid', 'openAndroid', { url }, '[异常] ' + err);
+        });
+    }
+
+    // closeWebView 测试
+    function callCloseWebView() {
+      if (!checkBridgeEnv()) {
+        showResult('result-closeWebView', 'closeWebView', {}, '[未检测到桥接环境]');
+        return;
+      }
+      window.flutter_inappwebview.callHandler('closeWebView', {})
+        .then(function(result) {
+          showResult('result-closeWebView', 'closeWebView', {}, result);
+        })
+        .catch(function(err) {
+          showResult('result-closeWebView', 'closeWebView', {}, '[异常] ' + err);
+        });
+    }
+
+    // getUseragent 测试
+    function callGetUseragent() {
+      if (!checkBridgeEnv()) {
+        showResult('result-getUseragent', 'getUseragent', {}, '[未检测到桥接环境]');
+        return;
+      }
+      window.flutter_inappwebview.callHandler('getUseragent', {})
+        .then(function(result) {
+          showResult('result-getUseragent', 'getUseragent', {}, result);
+        })
+        .catch(function(err) {
+          showResult('result-getUseragent', 'getUseragent', {}, '[异常] ' + err);
+        });
+    }
+
+    // googleLogin 测试
+    function callGoogleLogin() {
+      if (!checkBridgeEnv()) {
+        showResult('result-googleLogin', 'googleLogin', {}, '[未检测到桥接环境]');
+        return;
+      }
+      window.flutter_inappwebview.callHandler('googleLogin', {})
+        .then(function(result) {
+          showResult('result-googleLogin', 'googleLogin', {}, result);
+        })
+        .catch(function(err) {
+          showResult('result-googleLogin', 'googleLogin', {}, '[异常] ' + err);
+        });
+    }
+
+    // facebookLogin 测试
+    function callFacebookLogin() {
+      if (!checkBridgeEnv()) {
+        showResult('result-facebookLogin', 'facebookLogin', {}, '[未检测到桥接环境]');
+        return;
+      }
+      window.flutter_inappwebview.callHandler('facebookLogin', {})
+        .then(function(result) {
+          showResult('result-facebookLogin', 'facebookLogin', {}, result);
+        })
+        .catch(function(err) {
+          showResult('result-facebookLogin', 'facebookLogin', {}, '[异常] ' + err);
+        });
+    }
+
+    // getFcmToken 测试
+    function callGetFcmToken() {
+      if (!checkBridgeEnv()) {
+        showResult('result-getFcmToken', 'getFcmToken', {}, '[未检测到桥接环境]');
+        return;
+      }
+      window.flutter_inappwebview.callHandler('getFcmToken', {})
+        .then(function(result) {
+          showResult('result-getFcmToken', 'getFcmToken', {}, result);
+        })
+        .catch(function(err) {
+          showResult('result-getFcmToken', 'getFcmToken', {}, '[异常] ' + err);
+        });
+    }
+
+    // alert 测试
+    function callAlert() {
+      if (!checkBridgeEnv()) {
+        showResult('result-alert', 'alert', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let message = document.getElementById('alertMsg').value;
+      window.flutter_inappwebview.callHandler('alert', { message })
+        .then(function(result) {
+          showResult('result-alert', 'alert', { message }, result);
+        })
+        .catch(function(err) {
+          showResult('result-alert', 'alert', { message }, '[异常] ' + err);
+        });
+    }
+
+    // openWindow 测试
+    function callOpenWindow() {
+      if (!checkBridgeEnv()) {
+        showResult('result-openWindow', 'openWindow', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let url = document.getElementById('openWindowUrl').value;
+      window.flutter_inappwebview.callHandler('openWindow', { url })
+        .then(function(result) {
+          showResult('result-openWindow', 'openWindow', { url }, result);
+        })
+        .catch(function(err) {
+          showResult('result-openWindow', 'openWindow', { url }, '[异常] ' + err);
+        });
+    }
+
+    // handleHtmlLink 测试
+    function callHandleHtmlLink() {
+      if (!checkBridgeEnv()) {
+        showResult('result-handleHtmlLink', 'handleHtmlLink', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let url = document.getElementById('handleHtmlLinkUrl').value;
+      window.flutter_inappwebview.callHandler('handleHtmlLink', { url })
+        .then(function(result) {
+          showResult('result-handleHtmlLink', 'handleHtmlLink', { url }, result);
+        })
+        .catch(function(err) {
+          showResult('result-handleHtmlLink', 'handleHtmlLink', { url }, '[异常] ' + err);
+        });
+    }
+
+    function showResult(boxId, method, params, result) {
+      let box = document.getElementById(boxId);
+      let msg = `[${new Date().toLocaleTimeString()}] 方法: ${method}\n参数: ${JSON.stringify(params)}\n结果: ${JSON.stringify(result)}`;
+      box.innerHTML = `<span style='color:#2575fc;'>${msg.replace(/\n/g,'<br>')}</span>`;
+    }
+
+    // JSON安全解析
+    function safeParse(str) {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        alert('参数不是合法JSON');
+        return null;
+      }
+    }
+
+    function copyResult(boxId) {
+      var box = document.getElementById(boxId);
+      var text = box.innerText || box.textContent;
+      if (!text) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          alert('结果已复制到剪贴板');
+        });
+      } else {
+        // 兼容旧浏览器
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('结果已复制到剪贴板');
+      }
+    }
+  </script>
+</body>
+</html> 

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_remote_config/flutter_remote_config.dart';
+import 'package:flutter_wsd_bridge/flutter_wsd_bridge.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,12 @@ void main() async {
       'redirectUrl': 'https://wsd-demo.netlify.app/app-test',
     },
   );
+  // 注册JSBridge基础方法，便于H5端联调
+  JsBridgeManager().registerDefaultMethods();
+  // 全局开启WebView调试（仅限Android）
+  if (Platform.isAndroid) {
+    InAppWebViewController.setWebContentsDebuggingEnabled(true);
+  }
   runApp(const MyApp());
 }
 
@@ -89,6 +97,16 @@ class _WebViewOrNoticePageState extends State<WebViewOrNoticePage> {
               ? SafeArea(
                   child: InAppWebView(
                     initialUrlRequest: URLRequest(url: WebUri(_url!)),
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptEnabled: true, // 启用JS
+                      userAgent: 'WSDApp/1.0.0 (FlutterBridge)', // 自定义UserAgent，便于H5识别App环境
+                      useOnDownloadStart: true, // 可选：支持下载
+                      supportZoom: false, // 可选：关闭缩放
+                      mediaPlaybackRequiresUserGesture: false, // 可选：自动播放媒体
+                      allowFileAccessFromFileURLs: true, // 可选：本地文件访问
+                      allowUniversalAccessFromFileURLs: true, // 可选：本地文件跨域
+                      transparentBackground: false, // 可选：背景透明
+                    ),
                     onWebViewCreated: (controller) {
                       _webViewController = controller;
                     },
