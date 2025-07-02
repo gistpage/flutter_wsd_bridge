@@ -13,6 +13,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import '../config/wsd_bridge_config.dart';
 
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
@@ -183,31 +184,62 @@ class JsBridgeManager {
       return userAgent;
     });
     registerMethod('googleLogin', (params) async {
-      print('[JSBridge] googleLogin: params=[36m$params[0m');
+      print('[JSBridge] googleLogin: params=[36m$params[0m');
       try {
-        final GoogleSignIn _googleSignIn = GoogleSignIn();
-        final GoogleSignInAccount? account = await _googleSignIn.signIn();
+        // 检查是否已配置
+        if (!WsdBridgeConfig.isGoogleConfigured) {
+          return {
+            'idToken': null, 
+            'msg': 'Google登录未配置，请先调用 WsdBridgeConfig.setupGoogleLogin()'
+          };
+        }
+        
+        // 使用配置的 GoogleSignIn 实例，如果没有则使用默认配置
+        final GoogleSignIn googleSignIn = WsdBridgeConfig.googleSignIn ?? GoogleSignIn();
+        final GoogleSignInAccount? account = await googleSignIn.signIn();
+        
         if (account == null) {
           // 用户取消登录
           return {'idToken': null, 'msg': '用户取消登录'};
         }
+        
         final GoogleSignInAuthentication auth = await account.authentication;
         final String? idToken = auth.idToken;
+        
         if (idToken == null) {
-          return {'idToken': null, 'msg': '未获取到idToken'};
+          return {'idToken': null, 'msg': '未获取到idToken，请检查Google登录配置'};
         }
+        
         final result = {'idToken': idToken};
         print('[JSBridge] googleLogin: result=$result');
         return result;
       } catch (e, stack) {
         print('[JSBridge] googleLogin: 异常: $e\n$stack');
-        return {'idToken': null, 'msg': 'googleLogin异常: $e'};
+        String errorMsg = 'googleLogin异常: $e';
+        
+        // 提供更友好的错误提示
+        if (e.toString().contains('DEVELOPER_ERROR')) {
+          errorMsg = 'Google登录配置错误，请检查 google-services.json 或 GoogleService-Info.plist 配置';
+        } else if (e.toString().contains('SIGN_IN_REQUIRED')) {
+          errorMsg = 'Google登录需要用户授权';
+        }
+        
+        return {'idToken': null, 'msg': errorMsg};
       }
     });
     registerMethod('facebookLogin', (params) async {
-      print('[JSBridge] facebookLogin: params=[36m$params[0m');
+      print('[JSBridge] facebookLogin: params=[36m$params[0m');
       try {
+        // 检查是否已配置
+        if (!WsdBridgeConfig.isFacebookConfigured) {
+          return {
+            'idToken': null, 
+            'msg': 'Facebook登录未配置，请先调用 WsdBridgeConfig.setupFacebookLogin()'
+          };
+        }
+        
         final LoginResult result = await FacebookAuth.instance.login();
+        
         if (result.status == LoginStatus.success) {
           final AccessToken accessToken = result.accessToken!;
           // 通常 accessToken 就可用于后端校验，如需 profile 可继续请求
@@ -222,7 +254,14 @@ class JsBridgeManager {
         }
       } catch (e, stack) {
         print('[JSBridge] facebookLogin: 异常: $e\n$stack');
-        return {'idToken': null, 'msg': 'facebookLogin异常: $e'};
+        String errorMsg = 'facebookLogin异常: $e';
+        
+        // 提供更友好的错误提示
+        if (e.toString().contains('FacebookSDKException')) {
+          errorMsg = 'Facebook登录配置错误，请检查 AndroidManifest.xml 或 Info.plist 配置';
+        }
+        
+        return {'idToken': null, 'msg': errorMsg};
       }
     });
     registerMethod('getFcmToken', (params) async {

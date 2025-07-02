@@ -1,0 +1,74 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Flutter 项目开发规范（Project Rules）
+
+## 1. 目录结构
+- 业务代码全部放在 lib/src/ 下，按 bridge/models/services/utils/widgets 等分层组织
+- 插件主入口、平台适配、example、test 目录结构与官方模板保持一致
+
+## 2. 命名与格式
+- 类/接口：PascalCase
+- 方法/变量：camelCase
+- 常量：UPPER_SNAKE_CASE
+- 文件名：snake_case
+- 私有成员：下划线前缀
+- 每行≤80字符，2空格缩进，强制 dart format
+- 代码必须加必要注释，关键业务逻辑需说明"为什么"
+
+## 3. 组件与状态
+- StatelessWidget/StatefulWidget 合理使用，props 明确、解耦、易复用
+- 组件参数尽量用 final，避免副作用
+- 通用组件放 widgets/，业务页面分离，复用性强
+- 状态管理优先 Provider/Riverpod/Bloc，避免 setState 滥用
+- Provider：状态类用 ChangeNotifier，页面用 Consumer/Selector
+- Riverpod：推荐 StateNotifierProvider/AsyncValue
+- Bloc：事件驱动，状态不可变
+
+## 4. 路由与导航
+- 推荐 GoRouter/AutoRoute 统一管理路由
+- 页面跳转用 context.go/context.push，避免直接 Navigator.of(context)
+- 路由参数用类型安全方式传递
+
+## 5. 网络请求与本地存储
+- 网络请求优先用 Dio，配置全局拦截器、超时、日志
+- 本地存储用 SharedPreferences/Hive，敏感信息用 flutter_secure_storage
+- 数据模型需支持 JSON 序列化/反序列化
+
+## 6. 桥接与配置
+- JSBridge 方法注册/分发/回调统一在 bridge/ 目录
+- 参数类型统一 Map<String, dynamic>
+- 远程配置统一用 flutter_remote_config，UI自动响应
+
+## 7. 日志与异常
+- 统一 debugPrint/logger 输出日志，重要节点加注释
+- 所有异步/桥接/服务方法需 try-catch，返回结构体含 code/data/msg
+- 自定义异常类，便于全局错误处理
+
+## 8. 测试与发布
+- 核心方法需单元测试，example/ 提供典型用例
+- test/ 目录结构与业务分层一致，Widget 测试覆盖主要交互
+- 覆盖率建议≥80%，重要逻辑必须有测试
+- 重要变更写入 CHANGELOG.md，发布前充分测试
+- 禁止自动 git 操作，版本控制由开发者手动完成
+
+## 9. 性能与优化
+- 优先使用 const 构造函数，避免重复构建
+- 大列表用 ListView.builder，item 提供 key
+- 避免在 build 方法中创建对象，常量提取到类外
+- 资源释放及时（如 dispose 取消订阅）
+
+## 10. 依赖与安全
+- 新依赖需评估安全性和兼容性，敏感信息用安全存储
+- 网络安全建议证书锁定，依赖包需定期升级
+- 禁止硬编码 token、密钥等敏感信息
+
+## 11. 发布与持续集成
+- 重要变更写入 CHANGELOG.md，版本号递增
+- 打包命令统一，支持多环境（如 --dart-define）
+- 环境变量用 dart-define 管理，避免写死在代码中
+- 推荐集成 CI 工具自动化测试与打包
+
+--- 

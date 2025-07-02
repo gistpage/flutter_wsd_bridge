@@ -26,9 +26,165 @@
 - **配置驱动开发** - 通过配置控制所有行为
 - **TypeScript 支持** - 完整的类型定义
 
+## 🛠️ CLI 自动化配置工具（新增）
+
+WSD Bridge 提供了强大的 CLI 工具，**一键自动配置 Google 和 Facebook 第三方登录**，大幅减少手动配置工作量：
+
+### 🚀 快速开始
+
+```bash
+# 检查项目状态
+dart run wsd_bridge_cli check
+
+# 一键配置 Google 登录
+dart run wsd_bridge_cli config google
+
+# 一键配置 Facebook 登录
+dart run wsd_bridge_cli config facebook --app-id YOUR_FB_APP_ID
+
+# 清理所有配置
+dart run wsd_bridge_cli clean
+```
+
+### ✨ CLI 工具特性
+
+- 🔍 **智能检测** - 自动识别项目结构和配置状态
+- 🛡️ **安全备份** - 修改前自动备份，支持一键恢复
+- 🤖 **自动配置** - 无需手动修改 gradle、plist、manifest 等文件
+- 📱 **跨平台** - 同时配置 Android 和 iOS 平台
+- 🔧 **错误恢复** - 配置失败自动回滚到初始状态
+
+CLI 工具自动处理：
+- **Android**: `build.gradle`、`AndroidManifest.xml`、`strings.xml`
+- **iOS**: `Info.plist`、`Podfile`、URL Schemes
+
+详细使用指南：[Flutter 第三方登录平台配置指引](Flutter_第三方登录平台配置指引.md)
+
 ## 🌐 远程配置能力（推荐官方集成方式）
 
 > ⚠️ 本插件已内置依赖 [flutter_remote_config](https://github.com/gistpage/flutter_remote_config)，无需手动添加依赖。所有用法、API、配置均以官方文档为准。
+
+### 🔗 解耦使用指南（推荐）
+
+`flutter_remote_config` 是一个完全独立的包，您可以选择以下两种集成方式：
+
+#### 方式一：通过 flutter_wsd_bridge 间接使用（最简单）
+```yaml
+dependencies:
+  flutter_wsd_bridge:
+    git:
+      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      ref: main
+  # 无需额外添加 flutter_remote_config，已包含在内
+```
+
+#### 方式二：直接依赖 flutter_remote_config（解耦推荐）
+```yaml
+dependencies:
+  # 直接添加远程配置包，与 WSD Bridge 完全解耦
+  flutter_remote_config:
+    git:
+      url: https://github.com/gistpage/flutter_remote_config.git
+      ref: main
+  
+  # 可选：如果需要 WSD Bridge 的其他功能
+  flutter_wsd_bridge:
+    git:
+      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      ref: main
+```
+
+#### 方式三：版本锁定（生产环境推荐）
+```yaml
+dependencies:
+  flutter_remote_config:
+    git:
+      url: https://github.com/gistpage/flutter_remote_config.git
+      ref: main  # 或指定具体 commit hash 确保版本一致性
+  flutter_wsd_bridge:
+    git:
+      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      ref: main
+```
+
+### ⚡ 依赖冲突处理
+
+当您同时使用两个包时，Flutter 会自动解决依赖版本。如果遇到版本冲突：
+
+1. **查看冲突详情**：
+```bash
+flutter pub deps
+```
+
+2. **强制使用特定版本**：
+```yaml
+dependency_overrides:
+  flutter_remote_config:
+    git:
+      url: https://github.com/gistpage/flutter_remote_config.git
+      ref: main
+```
+
+3. **清理缓存**：
+```bash
+flutter clean
+flutter pub get
+```
+
+### 🎯 独立使用 flutter_remote_config
+
+如果您只需要远程配置功能，无需 WSD Bridge：
+
+```dart
+// pubspec.yaml
+dependencies:
+  flutter_remote_config:
+    git:
+      url: https://github.com/gistpage/flutter_remote_config.git
+      ref: main
+
+// main.dart
+import 'package:flutter_remote_config/flutter_remote_config.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyRemoteConfig.init(
+    gistId: 'your-gist-id',
+    githubToken: 'your-token',
+    debugMode: true,
+  );
+  runApp(MyApp());
+}
+```
+
+### 📋 解耦使用的优势
+
+- ✅ **版本控制灵活**：可独立升级远程配置包
+- ✅ **减少包体积**：按需选择功能模块
+- ✅ **避免依赖冲突**：更好的依赖管理
+- ✅ **测试独立性**：可单独测试远程配置功能
+- ✅ **迁移便利**：易于迁移到其他项目
+
+### 🔧 集成验证
+
+验证解耦集成是否成功：
+
+```dart
+void checkRemoteConfigIntegration() {
+  try {
+    // 验证 flutter_remote_config 是否正常工作
+    final config = EasyRemoteConfig.instance;
+    print('远程配置状态: ${config.isInitialized}');
+    
+    // 验证 WSD Bridge 是否正常工作（如果已集成）
+    final bridge = JsBridgeManager();
+    final hasEventTracker = bridge.isMethodRegistered('eventTracker');
+    print('WSD Bridge eventTracker 方法已注册: $hasEventTracker');
+  } catch (e) {
+    print('集成验证失败: $e');
+  }
+}
+```
 
 ### 官方推荐引入与自动刷新用法
 
@@ -410,7 +566,14 @@ WSDWebView(
 
 ---
 
-> **注意**：使用前请确保已正确配置所有必需的第三方 SDK（Adjust、AppsFlyer、Firebase）的密钥和证书。
+> **重要提醒**：
+> 
+> 1. **解耦使用建议**：如果您只需要远程配置功能，强烈建议直接依赖 `flutter_remote_config`，无需引入整个 WSD Bridge。
+> 2. **避免重复依赖**：当项目中同时存在两个包时，Flutter 会自动处理依赖版本，但建议使用 `dependency_overrides` 锁定版本。
+> 3. **功能完全独立**：`flutter_remote_config` 与 `flutter_wsd_bridge` 完全解耦，互不影响，可以单独使用。
+> 4. **版本同步**：建议使用相同的 `ref` 或 commit hash 确保版本一致性。
+> 
+> **配置前提**：使用 WSD Bridge 前请确保已正确配置所有必需的第三方 SDK（Adjust、AppsFlyer、Firebase）的密钥和证书。
 
 ## ⚙️ 平台兼容性与权限配置
 
