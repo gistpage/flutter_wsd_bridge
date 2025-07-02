@@ -11,6 +11,8 @@ import 'package:flutter_udid/flutter_udid.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
@@ -181,16 +183,47 @@ class JsBridgeManager {
       return userAgent;
     });
     registerMethod('googleLogin', (params) async {
-      print('[JSBridge] googleLogin: params=$params');
-      final result = {'idToken': 'mock_google_id_token'};
-      print('[JSBridge] googleLogin: result=$result');
-      return result;
+      print('[JSBridge] googleLogin: params=[36m$params[0m');
+      try {
+        final GoogleSignIn _googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? account = await _googleSignIn.signIn();
+        if (account == null) {
+          // 用户取消登录
+          return {'idToken': null, 'msg': '用户取消登录'};
+        }
+        final GoogleSignInAuthentication auth = await account.authentication;
+        final String? idToken = auth.idToken;
+        if (idToken == null) {
+          return {'idToken': null, 'msg': '未获取到idToken'};
+        }
+        final result = {'idToken': idToken};
+        print('[JSBridge] googleLogin: result=$result');
+        return result;
+      } catch (e, stack) {
+        print('[JSBridge] googleLogin: 异常: $e\n$stack');
+        return {'idToken': null, 'msg': 'googleLogin异常: $e'};
+      }
     });
     registerMethod('facebookLogin', (params) async {
-      print('[JSBridge] facebookLogin: params=$params');
-      final result = {'idToken': 'mock_facebook_id_token'};
-      print('[JSBridge] facebookLogin: result=$result');
-      return result;
+      print('[JSBridge] facebookLogin: params=[36m$params[0m');
+      try {
+        final LoginResult result = await FacebookAuth.instance.login();
+        if (result.status == LoginStatus.success) {
+          final AccessToken accessToken = result.accessToken!;
+          // 通常 accessToken 就可用于后端校验，如需 profile 可继续请求
+          final token = accessToken.token;
+          final data = {'idToken': token};
+          print('[JSBridge] facebookLogin: result=$data');
+          return data;
+        } else if (result.status == LoginStatus.cancelled) {
+          return {'idToken': null, 'msg': '用户取消登录'};
+        } else {
+          return {'idToken': null, 'msg': '登录失败: ${result.message}'};
+        }
+      } catch (e, stack) {
+        print('[JSBridge] facebookLogin: 异常: $e\n$stack');
+        return {'idToken': null, 'msg': 'facebookLogin异常: $e'};
+      }
     });
     registerMethod('getFcmToken', (params) async {
       print('[JSBridge] getFcmToken: params=$params');
