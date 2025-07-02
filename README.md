@@ -26,16 +26,17 @@
 - **配置驱动开发** - 通过配置控制所有行为
 - **TypeScript 支持** - 完整的类型定义
 
-## 🌐 远程配置能力
+## 🌐 远程配置能力（推荐官方集成方式）
 
 > ⚠️ 本插件已内置依赖 [flutter_remote_config](https://github.com/gistpage/flutter_remote_config)，无需手动添加依赖。所有用法、API、配置均以官方文档为准。
 
-### 初始化与使用（官方推荐方式）
+### 官方推荐引入与自动刷新用法
 
 ```dart
 import 'package:flutter_remote_config/flutter_remote_config.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await EasyRemoteConfig.init(
     gistId: 'your-gist-id', // GitHub Gist ID
     githubToken: 'your-token', // GitHub Token
@@ -46,30 +47,56 @@ void main() async {
       'redirectUrl': 'https://flutter.dev',
     },
   );
-  // 你的业务逻辑...
+  runApp(const MyApp());
 }
 ```
 
-#### 生产环境配置示例
+#### 自动监听配置变化（推荐）
 
 ```dart
-await EasyRemoteConfig.init(
-  gistId: 'your-production-gist-id',
-  githubToken: 'your-production-token',
-  debugMode: false, // 生产环境关闭调试
-  cacheTimeout: 300, // 5分钟缓存
-  networkTimeout: 10, // 10秒网络超时
-);
+@override
+void initState() {
+  super.initState();
+  _configSub = EasyRemoteConfig.instance.configStateStream.listen((state) {
+    if (state.status == ConfigStatus.loaded) {
+      _loadConfig(); // 配置变动时自动刷新UI
+    }
+  });
+  _loadConfig(); // 首次加载
+}
+
+@override
+void dispose() {
+  _configSub?.cancel();
+  super.dispose();
+}
 ```
 
-### 更多用法与详细说明
+#### 推荐页面跳转用法
 
-请参考 [flutter_remote_config 官方文档](https://github.com/gistpage/flutter_remote_config) 获取：
-- 参数说明与初始化细节
-- 配置字段要求与示例
-- 平台兼容性与权限配置
-- 常见问题与最佳实践
-- 组件用法与自动重定向等高级能力
+> **强烈建议：** 入口页面用官方推荐的 `EasyRedirectWidgets.simpleRedirect` 包裹，自动根据远程配置跳转，无需手动判断和刷新。
+
+```dart
+import 'package:flutter_remote_config/flutter_remote_config.dart';
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: EasyRedirectWidgets.simpleRedirect(
+        homeWidget: HomePage(),
+        loadingWidget: LoadingPage(),
+      ),
+    );
+  }
+}
+```
+- 只需配置好 gistId、githubToken 和 defaults，远程配置变动会自动推送到 UI，跳转逻辑全自动。
+- 支持前台2分钟、后台5分钟自动检测配置变动，无需手动 refresh。
+
+#### 进阶：自定义跳转逻辑
+
+如需自定义跳转条件，可监听 `configStateStream` 并根据配置字段动态控制页面。
 
 ---
 
@@ -89,25 +116,6 @@ dependencies:
     git:
       url: https://github.com/yourorg/flutter_wsd_bridge.git
       ref: main  # 或指定版本标签，如 v1.0.0
-  
-  # 必需的辅助依赖
-  flutter_inappwebview: ^6.1.5
-  device_info_plus: ^9.1.1
-  package_info_plus: ^4.2.0
-  connectivity_plus: ^6.0.1
-  shared_preferences: ^2.2.3
-```
-
-#### 方式二：本地开发依赖
-
-如果您正在本地开发或测试：
-
-```yaml
-dependencies:
-  flutter_wsd_bridge:
-    path: ../flutter_wsd_bridge  # 相对路径到包目录
-  
-  # 其他依赖同上...
 ```
 
 #### 安装依赖
@@ -141,12 +149,6 @@ dependencies:
 #### 更新依赖
 
 ```bash
-# 清理缓存并重新获取依赖
-flutter pub deps
-flutter pub get
-
-# 强制更新 Git 依赖
-flutter pub cache clean
 flutter pub get
 ```
 
@@ -409,4 +411,73 @@ WSDWebView(
 ---
 
 > **注意**：使用前请确保已正确配置所有必需的第三方 SDK（Adjust、AppsFlyer、Firebase）的密钥和证书。
+
+## ⚙️ 平台兼容性与权限配置
+
+> **iOS Info.plist 必须添加：**
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+  <key>NSAllowsArbitraryLoads</key>
+  <true/>
+  <key>NSAllowsArbitraryLoadsInWebContent</key>
+  <true/>
+</dict>
+<key>io.flutter.embedded_views_preview</key>
+<true/>
+<key>NSLocalNetworkUsageDescription</key>
+<string>此应用需要访问网络以加载远程配置和重定向页面</string>
+```
+
+> **AndroidManifest.xml 必须添加：**
+```xml
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+
+## 📝 配置字段类型要求与Gist JSON示例
+
+- `isRedirectEnabled` 必须为布尔值（true/false）
+- `redirectUrl` 必须为字符串
+
+**推荐 Gist 配置示例：**
+```json
+{
+  "version": "1",
+  "isRedirectEnabled": true,
+  "redirectUrl": "https://flutter.dev"
+}
+```
+
+## 🚩 常见问题与最佳实践
+
+- **入口页面必须用 `EasyRedirectWidgets.simpleRedirect` 包裹，否则不会自动跳转。**
+- **Gist 配置字段类型必须正确**，如 `isRedirectEnabled` 不能写成字符串。
+- **配置变更后需重启 App 或监听事件流**，否则 UI 不会自动刷新。
+- **WebViewPage 必须支持 url 热切换**，可参考官方 didUpdateWidget 逻辑。
+- **调试建议：** 控制台 debugMode 日志应有 "SimpleRedirect: ..." 等关键字。
+
+## 🔄 自动刷新机制说明
+
+- 包内部已自动处理定时检测（前台2分钟、后台5分钟）、生命周期感知、ETag 优化等，无需手动定时 refresh，除非有特殊需求。
+- 只需监听 `configStateStream` 或用 `EasyRedirectWidgets.simpleRedirect`，即可自动感知配置变动。
+
+## 🛠️ 事件监听多种写法
+
+- 推荐：
+```dart
+_configSub = EasyRemoteConfig.instance.configStateStream.listen((state) {
+  if (state.status == ConfigStatus.loaded) {
+    _loadConfig();
+  }
+});
+```
+- 简化版：
+```dart
+EasyRemoteConfig.instance.listen(() { _loadConfig(); });
+```
+
+## 🧑‍💻 热重载兼容提示
+
+- 生产环境和冷启动、前后台切换时，页面跳转和配置流响应100%一致，无需任何特殊处理。
+- 开发阶段如需热重载兼容体验，可用 `HotReloadFriendlyRedirect` 包裹入口页面。
 
