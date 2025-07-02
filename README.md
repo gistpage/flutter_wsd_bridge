@@ -509,5 +509,25 @@ InAppWebView(
 - 推荐同时调用 `registerWebViewController`，以支持插件的内跳/外跳等高级功能。
 - 你也可以继续使用 `WsdBridgeWebView`，其内部已自动完成上述注册。
 
+## 集成与使用注意事项
+
+- **务必在 WebView 的 `onWebViewCreated` 回调中调用：**
+  ```dart
+  JsBridgeManager.autoRegisterAllHandlers(controller);
+  ```
+  否则 H5 端调用 callHandler 会返回 null，桥接功能无法使用。
+
+- **推荐同时调用**：
+  ```dart
+  JsBridgeManager().registerWebViewController(controller);
+  ```
+  这样可支持插件的内跳/外跳等高级功能。
+
+- **每次桥接链路变更后，务必彻底重启 App（不是热重载）**，以确保所有 handler 注册生效。
+
+- **如遇 H5 callHandler 返回 null，优先排查 handler 是否已注册到 WebView。**
+
+- example 目录仅为演示和测试用，业务集成时请严格按照本 README 推荐用法接入。
+
 ---
 

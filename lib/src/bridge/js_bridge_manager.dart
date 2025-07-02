@@ -20,6 +20,9 @@ class JsBridgeManager {
   final Map<String, JsBridgeHandler> _methodRegistry = {};
   InAppWebViewController? _webViewController;
 
+  /// 可选：外部注入关闭WebView的回调（如需真正关闭页面）
+  static void Function()? onCloseWebView;
+
   /// 注册桥接方法
   void registerMethod(String method, JsBridgeHandler handler) {
     _methodRegistry[method] = handler;
@@ -140,6 +143,9 @@ class JsBridgeManager {
     });
     registerMethod('closeWebView', (params) async {
       print('[JSBridge] closeWebView: params=$params');
+      if (onCloseWebView != null) {
+        onCloseWebView!();
+      }
       final result = {'closed': true};
       print('[JSBridge] closeWebView: result=$result');
       return result;

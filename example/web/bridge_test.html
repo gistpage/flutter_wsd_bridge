@@ -125,6 +125,9 @@
     <button onclick="callCloseWebView()">🛑 调用 closeWebView</button>
     <div id="result-closeWebView" class="result-box"></div>
     <button onclick="copyResult('result-closeWebView')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+    <div style="text-align:center;margin:16px 0;">
+      <button onclick="openChildTestPage()" style="width:auto;padding:8px 24px;font-size:1em;">打开二级测试页（新标签页）</button>
+    </div>
   </div>
 
   <div class="section">
@@ -181,6 +184,8 @@
     <div id="result-handleHtmlLink" class="result-box"></div>
     <button onclick="copyResult('result-handleHtmlLink')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
   </div>
+
+  <div class="tip">⚡ <b>提示：</b>如需本地联调，请用 <b>http://localhost:8080/bridge_test.html</b> 作为 WebView 地址。</div>
 
   <script>
     console.log('H5 JS loaded at', new Date());
@@ -267,6 +272,16 @@
       window.flutter_inappwebview.callHandler('closeWebView', {})
         .then(function(result) {
           showResult('result-closeWebView', 'closeWebView', {}, result);
+          // 仅在二级页面自动关闭
+          if (isChildPage() && result && result.code === 0 && result.data && result.data.closed === true) {
+            window.close();
+            // 兜底：关闭失败时返回上一页
+            setTimeout(function() {
+              if (!window.closed) {
+                window.history.back();
+              }
+            }, 300);
+          }
         })
         .catch(function(err) {
           showResult('result-closeWebView', 'closeWebView', {}, '[异常] ' + err);
@@ -419,6 +434,16 @@
 
     // 显示当前时间戳，便于判断页面是否被缓存
     document.getElementById('timestampValue').textContent = Date.now();
+
+    // 打开二级测试页
+    function openChildTestPage() {
+      window.open(window.location.pathname + '?scene=child', '_blank');
+    }
+
+    // 判断是否为二级测试页
+    function isChildPage() {
+      return /[?&]scene=child/.test(window.location.search);
+    }
   </script>
 </body>
 </html> 
