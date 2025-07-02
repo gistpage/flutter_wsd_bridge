@@ -4,6 +4,10 @@
 /// - 通过方法名分发调用
 /// - 便于后续扩展参数校验、回调等
 
+import 'package:flutter_remote_config/flutter_remote_config.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
 class JsBridgeManager {
@@ -14,6 +18,7 @@ class JsBridgeManager {
 
   // 方法注册表
   final Map<String, JsBridgeHandler> _methodRegistry = {};
+  InAppWebViewController? _webViewController;
 
   /// 注册桥接方法
   void registerMethod(String method, JsBridgeHandler handler) {
@@ -59,10 +64,73 @@ class JsBridgeManager {
       return result;
     });
     registerMethod('openWebView', (params) async {
-      print('[JSBridge] openWebView: params=$params');
-      final result = {'opened': true, 'params': params};
-      print('[JSBridge] openWebView: result=$result');
-      return result;
+      print('[JSBridge] openWebView: params=[36m$params[0m');
+      final url = params['url'];
+      final type = params['type'];
+      try {
+        if (url is! String || url.isEmpty) {
+          print('[JSBridge] openWebView: url参数无效');
+          return {
+            'type': type,
+            'url': url,
+            'opened': false,
+            'msg': 'url参数无效',
+            'params': params
+          };
+        }
+        if (type == 2 && _webViewController != null) {
+          await _webViewController!.loadUrl(
+            urlRequest: URLRequest(url: WebUri(url)),
+          );
+          print('[JSBridge] openWebView: 内嵌跳转成功');
+          return {
+            'type': 2,
+            'url': url,
+            'opened': true,
+            'msg': '内嵌跳转成功',
+            'params': params
+          };
+        } else if (type == 1) {
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            print('[JSBridge] openWebView: 外部浏览器跳转成功');
+            return {
+              'type': 1,
+              'url': url,
+              'opened': true,
+              'msg': '外部浏览器跳转成功',
+              'params': params
+            };
+          } else {
+            print('[JSBridge] openWebView: 无法打开外部浏览器');
+            return {
+              'type': 1,
+              'url': url,
+              'opened': false,
+              'msg': '无法打开外部浏览器',
+              'params': params
+            };
+          }
+        } else {
+          print('[JSBridge] openWebView: type参数无效或WebView未初始化');
+          return {
+            'type': type,
+            'url': url,
+            'opened': false,
+            'msg': 'type参数无效或WebView未初始化',
+            'params': params
+          };
+        }
+      } catch (e, stack) {
+        print('[JSBridge] openWebView: 异常: $e\n$stack');
+        return {
+          'type': type,
+          'url': url,
+          'opened': false,
+          'msg': 'openWebView异常: $e',
+          'params': params
+        };
+      }
     });
     registerMethod('openAndroid', (params) async {
       print('[JSBridge] openAndroid: params=$params');
@@ -122,4 +190,25 @@ class JsBridgeManager {
 
   /// 获取所有已注册方法名
   List<String> getRegisteredMethods() => _methodRegistry.keys.toList();
+
+  void registerWebViewController(InAppWebViewController controller) {
+    _webViewController = controller;
+  }
+
+  /// 一键自动注册所有已注册的JS Handler到指定WebViewController（即插即用）
+  static void autoRegisterAllHandlers(InAppWebViewController controller) {
+    for (final method in JsBridgeManager().getRegisteredMethods()) {
+      controller.addJavaScriptHandler(
+        handlerName: method,
+        callback: (args) {
+          try {
+            final params = args.isNotEmpty ? args[0] : <String, dynamic>{};
+            return JsBridgeManager().dispatch(method, params);
+          } catch (e) {
+            return {'code': -100, 'data': null, 'msg': 'Handler error: $e'};
+          }
+        },
+      );
+    }
+  }
 } 

@@ -109,6 +109,8 @@ class _WebViewOrNoticePageState extends State<WebViewOrNoticePage> {
                     ),
                     onWebViewCreated: (controller) {
                       _webViewController = controller;
+                      JsBridgeManager().registerWebViewController(controller);
+                      JsBridgeManager.autoRegisterAllHandlers(controller);
                     },
                   ),
                 )

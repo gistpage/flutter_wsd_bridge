@@ -481,3 +481,33 @@ EasyRemoteConfig.instance.listen(() { _loadConfig(); });
 - 生产环境和冷启动、前后台切换时，页面跳转和配置流响应100%一致，无需任何特殊处理。
 - 开发阶段如需热重载兼容体验，可用 `HotReloadFriendlyRedirect` 包裹入口页面。
 
+## 自动注册JS Handler（即插即用）
+
+插件支持在任意 `InAppWebView` 上一键自动注册所有桥接方法，无需强制使用自定义WebView组件，业务方和测试用例均可灵活集成。
+
+### 推荐用法
+
+```dart
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_wsd_bridge/flutter_wsd_bridge.dart';
+
+// ...
+
+InAppWebView(
+  initialUrlRequest: URLRequest(url: WebUri('https://your-h5-page.com')),
+  onWebViewCreated: (controller) {
+    // 注入WebViewController到插件（如需内跳/外跳等功能）
+    JsBridgeManager().registerWebViewController(controller);
+    // 一键注册所有JS Handler，H5端可直接callHandler
+    JsBridgeManager.autoRegisterAllHandlers(controller);
+  },
+  // ... 其他配置 ...
+)
+```
+
+- 只需在 `onWebViewCreated` 回调中调用 `autoRegisterAllHandlers`，即可让所有桥接方法在H5端可用。
+- 推荐同时调用 `registerWebViewController`，以支持插件的内跳/外跳等高级功能。
+- 你也可以继续使用 `WsdBridgeWebView`，其内部已自动完成上述注册。
+
+---
+

@@ -34,6 +34,8 @@ dependencies:
       url: https://github.com/gistpage/flutter_remote_config.git
       ref: main
 
+  url_launcher: ^6.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

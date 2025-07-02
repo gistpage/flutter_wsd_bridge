@@ -84,9 +84,9 @@
     <p>一站式验证 <b>JSBridge</b> 与原生桥接能力，支持 eventTracker、openWebView、参数校验、回调等全流程。<br>请在 App WebView 中访问本页，所有结果实时高亮展示。</p>
   </div>
 
-  <div id="envStatus" class="env-status">环境检测中...</div>
+  <div id="pageTimestamp" class="env-status" style="background:#fffbe6;color:#b8860b;border:1px solid #ffe066;margin-top:8px;">页面加载时间戳：<span id="timestampValue"></span></div>
 
-  <div class="tip">⚡ <b>提示：</b>如需本地联调，请用 <b>http://localhost:8080/bridge_test.html</b> 作为 WebView 地址。</div>
+  <div id="envStatus" class="env-status">环境检测中...</div>
 
   <div class="section">
     <h2><span class="icon">📊</span>1. eventTracker 测试</h2>
@@ -105,9 +105,10 @@
     <input id="openWebViewUrl" value="https://flutter.dev" />
     <label>type (1=外跳, 2=内嵌):</label>
     <input id="openWebViewType" value="2" />
-    <button onclick="callOpenWebView()">🌟 调用 openWebView</button>
-    <div id="result-openWebView" class="result-box"></div>
-    <button onclick="copyResult('result-openWebView')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+    <button onclick="callOpenWebView(2, 'https://www.example.com')">测试内跳（type=2）</button>
+    <button onclick="callOpenWebView(1, 'https://www.example.com')">测试外跳（type=1）</button>
+    <div id="resultBox" style="margin-top:20px;"></div>
+    <button onclick="copyResult('resultBox')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
   </div>
 
   <div class="section">
@@ -218,20 +219,27 @@
     }
 
     // openWebView 测试
-    function callOpenWebView() {
-      if (!checkBridgeEnv()) {
-        showResult('result-openWebView', 'openWebView', {}, '[未检测到桥接环境]');
-        return;
-      }
-      let url = document.getElementById('openWebViewUrl').value;
-      let type = parseInt(document.getElementById('openWebViewType').value) || 2;
-      window.flutter_inappwebview.callHandler('openWebView', { url, type })
-        .then(function(result) {
-          showResult('result-openWebView', 'openWebView', { url, type }, result);
-        })
-        .catch(function(err) {
-          showResult('result-openWebView', 'openWebView', { url, type }, '[异常] ' + err);
+    function callOpenWebView(type, url) {
+      const params = { type, url };
+      if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+        window.flutter_inappwebview.callHandler('openWebView', params).then(function(result) {
+          console.log('openWebView result:', result);
+          showResult('resultBox', 'openWebView', params, result);
+          if (!result) {
+            alert('插件返回结果为 null，请检查插件端 openWebView handler 的返回值！');
+            return;
+          }
+          if (result.code === 0 && result.data && result.data.type && result.data.url) {
+            if (result.data.type === 2) {
+              window.location.href = result.data.url;
+            } else if (result.data.type === 1) {
+              window.open(result.data.url, '_blank');
+            }
+          }
         });
+      } else {
+        showResult('resultBox', 'openWebView', params, { code: -1, msg: '未检测到 flutter_inappwebview 环境', data: null });
+      }
     }
 
     // openAndroid 测试
@@ -375,7 +383,7 @@
 
     function showResult(boxId, method, params, result) {
       let box = document.getElementById(boxId);
-      let msg = `[${new Date().toLocaleTimeString()}] 方法: ${method}\n参数: ${JSON.stringify(params)}\n结果: ${JSON.stringify(result)}`;
+      let msg = `[${new Date().toLocaleTimeString()}] 方法: ${method}\n参数: ${JSON.stringify(params)}\n原始结果: ${JSON.stringify(result)}`;
       box.innerHTML = `<span style='color:#2575fc;'>${msg.replace(/\n/g,'<br>')}</span>`;
     }
 
@@ -408,6 +416,9 @@
         alert('结果已复制到剪贴板');
       }
     }
+
+    // 显示当前时间戳，便于判断页面是否被缓存
+    document.getElementById('timestampValue').textContent = Date.now();
   </script>
 </body>
 </html> 
