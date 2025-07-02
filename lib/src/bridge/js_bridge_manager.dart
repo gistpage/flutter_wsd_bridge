@@ -7,6 +7,10 @@
 import 'package:flutter_remote_config/flutter_remote_config.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_udid/flutter_udid.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
@@ -151,10 +155,30 @@ class JsBridgeManager {
       return result;
     });
     registerMethod('getUseragent', (params) async {
-      print('[JSBridge] getUseragent: params=$params');
-      final result = {'useragent': 'WSDApp/1.0.0 (FlutterBridge) UUID/123456'};
-      print('[JSBridge] getUseragent: result=$result');
-      return result;
+      // 获取品牌
+      String brand = '';
+      if (Platform.isAndroid) {
+        try {
+          final deviceInfo = DeviceInfoPlugin();
+          final androidInfo = await deviceInfo.androidInfo;
+          brand = androidInfo.brand ?? 'Android';
+        } catch (e) {
+          brand = 'Android';
+        }
+      } else if (Platform.isIOS) {
+        brand = 'Apple';
+      } else {
+        brand = Platform.operatingSystem;
+      }
+      // 获取App版本号
+      final info = await PackageInfo.fromPlatform();
+      String version = info.version;
+      // 获取UUID（flutter_udid方案，iOS为Keychain+IDFV，Android为AndroidId）
+      String uuid = await FlutterUdid.udid;
+      // 拼接官方格式
+      String userAgent = '$brand/AppShellVer:$version UUID/$uuid';
+      print('[JSBridge] getUseragent: result=$userAgent');
+      return userAgent;
     });
     registerMethod('googleLogin', (params) async {
       print('[JSBridge] googleLogin: params=$params');

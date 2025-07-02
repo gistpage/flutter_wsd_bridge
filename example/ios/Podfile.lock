@@ -11,11 +11,15 @@ PODS:
   - flutter_inappwebview_ios/Core (0.0.1):
     - Flutter
     - OrderedSet (~> 6.0.3)
+  - flutter_udid (0.0.1):
+    - Flutter
+    - SAMKeychain
   - flutter_wsd_bridge (0.0.1):
     - Flutter
   - OrderedSet (6.0.3)
   - package_info_plus (0.4.5):
     - Flutter
+  - SAMKeychain (1.5.3)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -27,6 +31,7 @@ DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
+  - flutter_udid (from `.symlinks/plugins/flutter_udid/ios`)
   - flutter_wsd_bridge (from `.symlinks/plugins/flutter_wsd_bridge/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -35,6 +40,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - OrderedSet
+    - SAMKeychain
 
 EXTERNAL SOURCES:
   connectivity_plus:
@@ -45,6 +51,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_inappwebview_ios:
     :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
+  flutter_udid:
+    :path: ".symlinks/plugins/flutter_udid/ios"
   flutter_wsd_bridge:
     :path: ".symlinks/plugins/flutter_wsd_bridge/ios"
   package_info_plus:
@@ -59,9 +67,11 @@ SPEC CHECKSUMS:
   device_info_plus: 335f3ce08d2e174b9fdc3db3db0f4e3b1f66bd89
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
+  flutter_udid: ae1de3aafc160cef344ecdd7ad9defa0b6a2b2b3
   flutter_wsd_bridge: 423e8b31393509acf4e3b9a43c62b6c49cb41c81
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: 566e1b7a2f3900e4b0020914ad3fc051dcc95596
+  SAMKeychain: 483e1c9f32984d50ca961e26818a534283b4cd5c
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
