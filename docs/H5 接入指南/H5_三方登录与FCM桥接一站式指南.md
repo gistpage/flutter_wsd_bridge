@@ -1,32 +1,26 @@
-# H5 第三方登录桥接使用指南
+# H5 第三方登录与 FCM Token 桥接使用指南
 
-本指南介绍如何在H5页面中通过JS桥接调用Flutter原生的Google和Facebook第三方登录功能。
+本指南介绍如何在 H5 页面中通过 JS 桥接调用 Flutter 原生的 Google、Facebook 第三方登录与 FCM 推送 Token 能力，实现一站式集成。
 
 ---
 
 ## 📋 前置条件
 
-1. **App端已完成配置**：使用CLI工具完成Google/Facebook配置
-2. **WebView已自动初始化三方登录**：直接使用`WsdBridgeWebView`组件，无需手动调用`WsdBridgeConfig.setupGoogleLogin()`和`setupFacebookLogin()`
-3. **H5运行在WebView环境**：确保桥接环境可用
+1. **App 端已完成 Firebase/三方登录/FCM 配置**：参考《Firebase_三方登录与FCM一站式集成指引》完成所有依赖与原生配置。
+2. **WebView 已自动初始化三方登录与 FCM**：直接使用 `WsdBridgeWebView` 组件，无需手动 setup。
+3. **H5 运行在 WebView 环境**：确保桥接环境可用。
 
-> ⚠️ 从 vX.X.X 版本起，`WsdBridgeWebView` 组件会自动完成 Google/Facebook 登录初始化，除非有特殊需求无需手动初始化。
+> ⚠️ `WsdBridgeWebView` 组件会自动完成 Google/Facebook 登录与 FCM Token 初始化，除非有特殊需求无需手动初始化。
 
 ---
 
 ## 🔍 环境检测
 
-在调用登录方法前，建议先检测桥接环境：
+在调用桥接方法前，建议先检测桥接环境：
 
 ```javascript
 function checkBridgeEnv() {
-  if (window.flutter_inappwebview && typeof window.flutter_inappwebview.callHandler === 'function') {
-    console.log('✅ 桥接环境正常');
-    return true;
-  } else {
-    console.log('❌ 未检测到桥接环境');
-    return false;
-  }
+  return window.flutter_inappwebview && typeof window.flutter_inappwebview.callHandler === 'function';
 }
 ```
 
@@ -166,7 +160,56 @@ function facebookLogin() {
 
 ---
 
-## 🔧 完整示例页面
+## 🟢 FCM Token 获取
+
+### 基础调用
+```javascript
+function getFcmToken() {
+  if (!checkBridgeEnv()) {
+    alert('桥接环境不可用');
+    return;
+  }
+  window.flutter_inappwebview.callHandler('getFcmToken', {})
+    .then(function(result) {
+      if (result && result.data && result.data.fcmToken) {
+        alert('FCM Token: ' + result.data.fcmToken);
+        // 可将 Token 发送到后端
+        // sendTokenToBackend('fcm', result.data.fcmToken);
+      } else {
+        alert('未获取到 FCM Token: ' + (result && result.data && result.data.msg));
+      }
+    })
+    .catch(function(error) {
+      alert('FCM Token 获取异常: ' + error);
+    });
+}
+```
+
+### 响应格式
+```javascript
+// 成功响应
+{
+  "code": 0,
+  "data": {
+    "fcmToken": "xxxxxx...",
+    "msg": null
+  },
+  "msg": "success"
+}
+// 失败响应
+{
+  "code": 0,
+  "data": {
+    "fcmToken": null,
+    "msg": "未获取到Token或未初始化Firebase"
+  },
+  "msg": "success"
+}
+```
+
+---
+
+## 🔧 完整示例页面（含三方登录与 FCM Token）
 
 ```html
 <!DOCTYPE html>

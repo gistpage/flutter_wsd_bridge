@@ -15,6 +15,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../config/wsd_bridge_config.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
@@ -291,7 +292,14 @@ class JsBridgeManager {
     });
     registerMethod('getFcmToken', (params) async {
       print('[JSBridge] getFcmToken: params=$params');
-      final result = {'fcmToken': 'mock_fcm_token'};
+      String? token;
+      try {
+        token = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        print('[JSBridge] getFcmToken: 获取失败 $e');
+        token = '';
+      }
+      final result = {'fcmToken': token ?? ''};
       print('[JSBridge] getFcmToken: result=$result');
       return result;
     });
