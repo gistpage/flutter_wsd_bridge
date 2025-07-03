@@ -36,6 +36,8 @@ dependencies:
       ref: main
 
   url_launcher: ^6.1.7
+  google_sign_in: ^6.2.1
+  flutter_facebook_auth: ^7.1.2
 
 dev_dependencies:
   flutter_test:

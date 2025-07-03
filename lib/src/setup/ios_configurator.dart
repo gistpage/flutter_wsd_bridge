@@ -119,7 +119,7 @@ class IOSConfigurator {
     String newContent = content;
     
     // 添加 Facebook 基本配置
-    final facebookConfig = '''
+    String facebookConfig = '''
 	<key>FacebookAppID</key>
 	<string>$appId</string>
 	<key>FacebookClientToken</key>

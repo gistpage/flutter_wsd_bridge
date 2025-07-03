@@ -243,7 +243,7 @@ class JsBridgeManager {
         if (result.status == LoginStatus.success) {
           final AccessToken accessToken = result.accessToken!;
           // 通常 accessToken 就可用于后端校验，如需 profile 可继续请求
-          final token = accessToken.token;
+          final token = accessToken.tokenString;
           final data = {'idToken': token};
           print('[JSBridge] facebookLogin: result=$data');
           return data;

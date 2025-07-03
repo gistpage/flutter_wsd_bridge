@@ -195,7 +195,7 @@ apply plugin: 'com.google.gms.google-services'  // Google Services plugin''',
     final stringsPath = androidInfo.configFiles['strings.xml']!;
     
     // 确保文件存在
-    await FileUtils.ensureFileExists(stringsPath, _getDefaultStringsXml());
+    await FileUtils.ensureFileExists(stringsPath);
     
     // 创建备份
     await FileUtils.createBackup(stringsPath);
