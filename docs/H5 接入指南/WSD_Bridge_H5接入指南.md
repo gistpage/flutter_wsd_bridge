@@ -22,6 +22,10 @@
 | [window.alert/confirm/prompt](#windowalertconfirmprompt-原生js弹窗桥接) | 原生JS弹窗桥接 |
 | [window.open/a标签](#windowopena标签-原生跳转桥接) | 原生跳转桥接 |
 
+## 对比速查
+- [常用页面跳转/窗口控制桥接方法对比](#常用页面跳转窗口控制桥接方法对比)
+- [alert与window.alert/confirm/prompt弹窗能力对比](#alert-window-dialog-compare)
+
 ---
 
 ## 1. 如何判断桥接环境
@@ -306,3 +310,39 @@ if (window.flutter_inappwebview) {
 ---
 
 如有更多H5桥接需求或遇到问题，请联系App开发同学协助对接。 
+
+### 常用页面跳转/窗口控制桥接方法对比
+<a name="常用页面跳转窗口控制桥接方法对比"></a>
+
+| 方法名/类型                  | 触发方式           | 适用场景             | 业务控制能力         | 典型用途                   |
+|------------------------------|--------------------|----------------------|----------------------|----------------------------|
+| openWebView                  | H5主动调用         | 明确业务跳转         | H5控制，App执行      | 按钮/流程跳转、活动页      |
+| openAndroid                  | H5主动调用         | 外部浏览器跳转       | H5控制，App执行      | "用浏览器打开"            |
+| closeWebView                 | H5主动调用         | 关闭当前WebView      | H5控制，App执行      | 关闭弹窗/流程返回          |
+| openWindow                   | H5主动调用         | 新窗口打开/兼容window.open | H5控制，App执行      | 新开WebView或外跳          |
+| handleHtmlLink               | a标签点击/主动     | 需业务分支判断       | App可拦截/分支处理   | 链接白/黑名单、需登录      |
+| window.open/a标签            | H5原生JS调用       | 简单外跳/新窗口      | App自动桥接外跳      | target="_blank"、window.open|
+
+**要点总结：**
+- openWebView/openAndroid/closeWebView/openWindow 适合 H5 主动发起、业务明确的跳转/关闭/新窗口，App 只做执行。
+- handleHtmlLink 适合 a 标签点击、需业务分支判断的场景，App 可灵活拦截、提示或放行，适合复杂业务联动。
+- window.open/a标签 适合简单外跳/新窗口，自动用外部浏览器打开，无需特殊适配。
+- 选型建议：
+  - 业务跳转、流程控制、按钮等用 openWebView/openAndroid/closeWebView/openWindow。
+  - 需要对 a 标签跳转做统一拦截、白名单、登录校验等用 handleHtmlLink。
+  - 仅需简单外跳/新窗口用 window.open/a标签。
+
+### alert与window.alert/confirm/prompt弹窗能力对比
+<a name="alert-window-dialog-compare"></a>
+
+| 方法类型                        | 触发方式           | 支持弹窗类型         | 适用场景           | 业务控制能力         | 典型用途           |
+|----------------------------------|--------------------|---------------------|--------------------|----------------------|--------------------|
+| alert                           | H5主动调用         | 仅支持 alert        | 业务自定义提示     | H5控制，App执行      | 操作成功/失败提示  |
+| window.alert/confirm/prompt      | H5原生JS调用       | alert/confirm/prompt| 通用弹窗/输入/确认 | H5控制，App桥接原生  | 通用弹窗、确认、输入|
+
+**要点总结：**
+- `alert` 方法适合业务自定义弹窗，H5 通过 callHandler 主动调用，App端弹出原生 alert。
+- `window.alert/confirm/prompt` 适合直接用原生JS弹窗API，App自动桥接为原生弹窗，支持更多类型（确认、输入）。
+- 选型建议：
+  - 仅需简单提示、需统一样式/业务弹窗时用 `alert`。
+  - 需兼容 confirm/prompt 或直接用原生JS弹窗API时用 `window.alert/confirm/prompt`。 

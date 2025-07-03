@@ -24,15 +24,20 @@ void main() async {
   if (Platform.isAndroid) {
     InAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
-  runApp(const MyApp());
+  // 新增：全局 navigatorKey 支持弹窗
+  final GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
+  JsBridgeManager.navigatorKey = navKey;
+  runApp(MyApp(navigatorKey: navKey));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final GlobalKey<NavigatorState> navigatorKey;
+  const MyApp({super.key, required this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'WSD Bridge Example',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

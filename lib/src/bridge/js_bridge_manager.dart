@@ -14,6 +14,7 @@ import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../config/wsd_bridge_config.dart';
+import 'package:flutter/material.dart';
 
 typedef JsBridgeHandler = Future<dynamic> Function(Map<String, dynamic> params);
 
@@ -33,6 +34,9 @@ class JsBridgeManager {
   /// 添加外跳前的状态保存
   String? _preExternalJumpUrl;
   bool _isExternalJumping = false;
+
+  /// 全局弹窗 context 支持
+  static GlobalKey<NavigatorState>? navigatorKey;
 
   /// 注册桥接方法
   void registerMethod(String method, JsBridgeHandler handler) {
@@ -292,14 +296,60 @@ class JsBridgeManager {
       return result;
     });
     registerMethod('alert', (params) async {
-      print('[JSBridge] alert: params=$params');
-      final result = {'alerted': true, 'message': params['message']};
+      print('[JSBridge] alert: params=[36m$params[0m');
+      final message = params['message']?.toString() ?? '';
+      // 优先用全局 navigatorKey 弹窗
+      final context = navigatorKey?.currentState?.overlay?.context;
+      if (context != null) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('确定'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        print('[JSBridge] alert: 未找到可用 context，未弹窗');
+      }
+      final result = {'alerted': true, 'message': message};
       print('[JSBridge] alert: result=$result');
       return result;
     });
     registerMethod('openWindow', (params) async {
       print('[JSBridge] openWindow: params=$params');
-      final result = {'opened': true, 'url': params['url']};
+      final url = params['url']?.toString() ?? '';
+      bool opened = false;
+      String msg = '';
+      // 优先尝试用 WebView 内嵌新开页面
+      if (_webViewController != null && url.isNotEmpty) {
+        try {
+          await _webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+          opened = true;
+          msg = 'WebView 内嵌新开页面成功';
+        } catch (e) {
+          print('[JSBridge] openWindow: WebView 内嵌失败，尝试外跳: $e');
+        }
+      }
+      // 如果 WebView 不可用或失败，尝试外部浏览器
+      if (!opened && url.isNotEmpty) {
+        try {
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            opened = true;
+            msg = '外部浏览器打开成功';
+          } else {
+            msg = '无法打开外部浏览器';
+          }
+        } catch (e) {
+          msg = 'openWindow异常: $e';
+        }
+      }
+      final result = {'opened': opened, 'url': url, 'msg': msg};
       print('[JSBridge] openWindow: result=$result');
       return result;
     });
