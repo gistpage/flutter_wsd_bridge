@@ -2,17 +2,32 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../bridge/js_bridge_manager.dart';
+import '../config/wsd_bridge_config.dart';
 
 class WsdBridgeWebView extends StatefulWidget {
   final String initialUrl;
   final InAppWebViewSettings? settings;
   final void Function(InAppWebViewController)? onWebViewCreated;
 
+  /// 新增：自动初始化三方登录配置相关参数
+  final String? googleAndroidClientId;
+  final String? googleIosClientId;
+  final List<String>? googleScopes;
+  final String? facebookAppId;
+  final String? facebookAppName;
+  final bool autoInitThirdPartyLogin;
+
   const WsdBridgeWebView({
     Key? key,
     required this.initialUrl,
     this.settings,
     this.onWebViewCreated,
+    this.googleAndroidClientId,
+    this.googleIosClientId,
+    this.googleScopes,
+    this.facebookAppId,
+    this.facebookAppName,
+    this.autoInitThirdPartyLogin = true,
   }) : super(key: key);
 
   @override
@@ -30,6 +45,34 @@ class _WsdBridgeWebViewState extends State<WsdBridgeWebView> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 自动初始化三方登录配置
+    if (widget.autoInitThirdPartyLogin) {
+      // 关键注释：自动初始化三方登录，提升易用性，防止用户忘记配置
+      // Google 登录
+      try {
+        // 避免重复初始化
+        if (!WsdBridgeConfig.isGoogleConfigured) {
+          WsdBridgeConfig.setupGoogleLogin(
+            androidClientId: widget.googleAndroidClientId,
+            iosClientId: widget.googleIosClientId,
+            scopes: widget.googleScopes ?? const ['email'],
+          );
+        }
+      } catch (e) {
+        debugPrint('[WsdBridgeWebView] Google登录自动初始化异常: $e');
+      }
+      // Facebook 登录
+      try {
+        if (!WsdBridgeConfig.isFacebookConfigured) {
+          WsdBridgeConfig.setupFacebookLogin(
+            appId: widget.facebookAppId,
+            appName: widget.facebookAppName,
+          );
+        }
+      } catch (e) {
+        debugPrint('[WsdBridgeWebView] Facebook登录自动初始化异常: $e');
+      }
+    }
     _startExternalJumpCheck();
   }
 

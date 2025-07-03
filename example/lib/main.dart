@@ -20,16 +20,6 @@ void main() async {
   );
   // 注册JSBridge基础方法，便于H5端联调
   JsBridgeManager().registerDefaultMethods();
-  
-  // 🔑 配置第三方登录（必需步骤）
-  // Google 登录配置（如果已配置 google-services.json 和 GoogleService-Info.plist）
-  WsdBridgeConfig.setupGoogleLogin(
-    scopes: ['email', 'profile'], // 可选：自定义权限范围
-  );
-  
-  // Facebook 登录配置（如果已配置 AndroidManifest.xml 和 Info.plist）
-  WsdBridgeConfig.setupFacebookLogin();
-  
   // 全局开启WebView调试（仅限Android）
   if (Platform.isAndroid) {
     InAppWebViewController.setWebContentsDebuggingEnabled(true);
