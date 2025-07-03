@@ -19,6 +19,8 @@
 | [alert](#alert-弹窗) | 弹窗 |
 | [openWindow](#openwindow-windowopen) | window.open |
 | [handleHtmlLink](#handlehtmllink-html-a-超链接) | html a 超链接 |
+| [window.alert/confirm/prompt](#windowalertconfirmprompt-原生js弹窗桥接) | 原生JS弹窗桥接 |
+| [window.open/a标签](#windowopena标签-原生跳转桥接) | 原生跳转桥接 |
 
 ---
 
@@ -166,6 +168,45 @@ window.flutter_inappwebview.callHandler('handleHtmlLink', { url: 'https://www.ba
 **典型场景说明：**
 - 用户操作：点击H5页面中的a标签超链接时触发（如需自定义跳转行为）。
 - 成功反馈：根据App端配置，可能在当前WebView或新窗口打开链接，或跳转到外部浏览器。
+
+### window.alert/confirm/prompt 原生JS弹窗桥接
+<a name="windowalertconfirmprompt-原生js弹窗桥接"></a>
+
+> **说明：**
+> 在App WebView环境下，H5页面直接调用 `window.alert`、`window.confirm`、`window.prompt`，会自动弹出Flutter原生弹窗，无需特殊适配。
+
+```js
+// window.alert
+alert('Hello from H5!');
+
+// window.confirm
+var ok = confirm('确定要继续吗？');
+
+// window.prompt
+var input = prompt('请输入内容', '默认值');
+```
+
+**典型场景说明：**
+- 用户操作：H5页面需要主动提示、确认、输入时直接调用原生JS方法
+- 成功反馈：App端弹出原生弹窗，用户操作后返回结果（confirm/prompt有返回值）
+
+### window.open/a标签 原生跳转桥接
+<a name="windowopena标签-原生跳转桥接"></a>
+
+> **说明：**
+> 在App WebView环境下，H5页面直接调用 `window.open(url)` 或点击 `<a href target="_blank">`，会自动用外部浏览器打开新页面，无需特殊适配。
+
+```js
+// window.open
+window.open('https://flutter.dev', '_blank');
+
+// a标签
+<a href="https://www.baidu.com" target="_blank">百度</a>
+```
+
+**典型场景说明：**
+- 用户操作：H5页面需要新窗口跳转、外部浏览器打开时直接用原生JS方法
+- 成功反馈：App端自动用外部浏览器打开目标链接
 
 ---
 
