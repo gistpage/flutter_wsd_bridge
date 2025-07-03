@@ -6,25 +6,44 @@
 
 一个强大的 Flutter 插件，专为 WSD（Web Service Development）应用打造，提供完整的 JavaScript 桥接功能，支持混合应用开发、事件追踪、第三方 SDK 集成和 H5 网页交互。
 
-## ✨ 核心特性
+## ✨ 主要特性
+- 跨平台 JSBridge（Android/iOS）
+- WebView 管理与事件追踪
+- 第三方登录与SDK集成（Google、Facebook、Adjust、AppsFlyer、Firebase等）
+- 远程配置能力（内置 flutter_remote_config）
+- 自动处理 WebView 外跳返回，无需手动写任何代码
 
-### 🌉 JavaScript 桥接
-- **跨平台统一接口** - Android 和 iOS 原生桥接实现
-- **事件追踪系统** - 支持完整的用户行为分析
-- **WebView 管理** - 灵活的网页容器控制
-- **外部浏览器调用** - 支持系统默认浏览器打开
+## 🚀 快速开始
 
-### 📊 第三方 SDK 集成
-- **Adjust SDK** - 移动应用归因分析
-- **AppsFlyer SDK** - 营销分析和归因追踪
-- **Firebase** - 身份认证和云消息推送
-- **设备信息获取** - 完整的设备参数收集
+1. 在 `pubspec.yaml` 添加依赖：
+```yaml
+dependencies:
+  flutter_wsd_bridge:
+    git:
+      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      ref: main
+```
 
-### 🔧 高级功能
-- **自定义 UserAgent** - 灵活的浏览器标识设置
-- **动态参数注入** - URL 参数自动构建和注入
-- **配置驱动开发** - 通过配置控制所有行为
-- **TypeScript 支持** - 完整的类型定义
+2. 直接在页面中使用插件提供的 WebView 组件：
+```dart
+import 'package:flutter_wsd_bridge/flutter_wsd_bridge.dart';
+
+// ... 远程配置等初始化 ...
+
+body: WsdBridgeWebView(
+  initialUrl: 'https://wsd-demo.netlify.app/app-test',
+)
+```
+
+> 插件内部已自动处理所有 WebView 外跳返回、导航栈、生命周期监听等逻辑。你无需手动处理，直接用即可。
+
+## 📚 更多功能
+- 详见本仓库文档和示例项目。
+- 所有远程配置能力请参考 [flutter_remote_config 官方文档](https://github.com/gistpage/flutter_remote_config)。
+
+---
+
+如需高级用法、事件追踪、第三方登录等，请参考详细文档和示例代码。
 
 ## 🛠️ CLI 自动化配置工具（新增）
 
