@@ -1,5 +1,6 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 /// WSD Bridge 配置管理类
 /// 
@@ -8,6 +9,7 @@ class WsdBridgeConfig {
   static GoogleSignIn? _googleSignIn;
   static bool _isGoogleConfigured = false;
   static bool _isFacebookConfigured = false;
+  static bool _firebaseInitialized = false;
   
   /// Google 登录配置
   /// 
@@ -103,5 +105,12 @@ class WsdBridgeConfig {
       'googleConfigured': _isGoogleConfigured,
       'facebookConfigured': _isFacebookConfigured,
     };
+  }
+  
+  static Future<void> ensureFirebaseInitialized() async {
+    if (!_firebaseInitialized) {
+      await Firebase.initializeApp();
+      _firebaseInitialized = true;
+    }
   }
 } 

@@ -291,9 +291,10 @@ class JsBridgeManager {
       }
     });
     registerMethod('getFcmToken', (params) async {
-      print('[JSBridge] getFcmToken: params=$params');
+      print('[JSBridge] getFcmToken: params=[36m$params[0m');
       String? token;
       try {
+        await WsdBridgeConfig.ensureFirebaseInitialized();
         token = await FirebaseMessaging.instance.getToken();
       } catch (e) {
         print('[JSBridge] getFcmToken: 获取失败 $e');

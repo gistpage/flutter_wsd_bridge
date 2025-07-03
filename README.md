@@ -763,5 +763,9 @@ InAppWebView(
 
 - example 目录仅为演示和测试用，业务集成时请严格按照本 README 推荐用法接入。
 
+## 自动初始化说明
+
+本插件已自动初始化 Firebase（如 FCM 推送），无需在 main.dart 手动调用 Firebase.initializeApp()，除非有多实例或自定义参数需求。
+
 ---
 
