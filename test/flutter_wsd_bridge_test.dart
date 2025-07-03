@@ -24,6 +24,6 @@ void main() {
     MockFlutterWsdBridgePlatform fakePlatform = MockFlutterWsdBridgePlatform();
     FlutterWsdBridgePlatform.instance = fakePlatform;
 
-    expect(await flutterWsdBridgePlugin.getPlatformVersion(), '42');
+    expect(await FlutterWsdBridge.getPlatformVersion(), '42');
   });
 }

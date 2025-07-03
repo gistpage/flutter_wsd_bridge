@@ -29,6 +29,10 @@ class JsBridgeManager {
 
   /// 可选：外部注入关闭WebView的回调（如需真正关闭页面）
   static void Function()? onCloseWebView;
+  
+  /// 添加外跳前的状态保存
+  String? _preExternalJumpUrl;
+  bool _isExternalJumping = false;
 
   /// 注册桥接方法
   void registerMethod(String method, JsBridgeHandler handler) {
@@ -74,7 +78,7 @@ class JsBridgeManager {
       return result;
     });
     registerMethod('openWebView', (params) async {
-      print('[JSBridge] openWebView: params=[36m$params[0m');
+      print('[JSBridge] openWebView: params=[36m$params[0m');
       final url = params['url'];
       final type = params['type'];
       try {
@@ -88,7 +92,9 @@ class JsBridgeManager {
             'params': params
           };
         }
+        
         if (type == 2 && _webViewController != null) {
+          // 内嵌跳转
           await _webViewController!.loadUrl(
             urlRequest: URLRequest(url: WebUri(url)),
           );
@@ -101,6 +107,18 @@ class JsBridgeManager {
             'params': params
           };
         } else if (type == 1) {
+          // 外跳前保存当前页面状态
+          if (_webViewController != null) {
+            try {
+              final webUri = await _webViewController!.getUrl();
+              _preExternalJumpUrl = webUri?.toString();
+              _isExternalJumping = true;
+              print('[JSBridge] openWebView: 外跳前保存状态 - $_preExternalJumpUrl');
+            } catch (e) {
+              print('[JSBridge] openWebView: 无法获取当前URL - $e');
+            }
+          }
+          
           if (await canLaunchUrl(Uri.parse(url))) {
             await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
             print('[JSBridge] openWebView: 外部浏览器跳转成功');
@@ -109,9 +127,11 @@ class JsBridgeManager {
               'url': url,
               'opened': true,
               'msg': '外部浏览器跳转成功',
+              'preJumpUrl': _preExternalJumpUrl, // 返回外跳前的URL
               'params': params
             };
           } else {
+            _isExternalJumping = false; // 重置状态
             print('[JSBridge] openWebView: 无法打开外部浏览器');
             return {
               'type': 1,
@@ -132,6 +152,7 @@ class JsBridgeManager {
           };
         }
       } catch (e, stack) {
+        _isExternalJumping = false; // 异常时重置状态
         print('[JSBridge] openWebView: 异常: $e\n$stack');
         return {
           'type': type,
@@ -312,5 +333,18 @@ class JsBridgeManager {
         },
       );
     }
+  }
+
+  /// 检查是否正在外跳过程中
+  bool get isExternalJumping => _isExternalJumping;
+  
+  /// 获取外跳前的URL
+  String? get preExternalJumpUrl => _preExternalJumpUrl;
+  
+  /// 重置外跳状态（从外部浏览器返回时调用）
+  void resetExternalJumpState() {
+    _isExternalJumping = false;
+    _preExternalJumpUrl = null;
+    print('[JSBridge] 重置外跳状态');
   }
 } 
