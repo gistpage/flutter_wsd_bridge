@@ -37,6 +37,39 @@ body: WsdBridgeWebView(
 
 > 插件内部已自动处理所有 WebView 外跳返回、导航栈、生命周期监听等逻辑。你无需手动处理，直接用即可。
 
+---
+
+### ⚠️ 弹窗桥接全局 navigatorKey 必须设置
+
+> **重要说明：**  
+> 为确保 `alert`、`confirm` 等弹窗桥接方法在 App 内正常弹出，**请在入口文件（如 main.dart）设置全局 navigatorKey，并赋值给 JsBridgeManager.navigatorKey**，如下：
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // ... 其它初始化 ...
+  final GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
+  JsBridgeManager.navigatorKey = navKey;
+  runApp(MyApp(navigatorKey: navKey));
+}
+
+class MyApp extends StatelessWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+  const MyApp({super.key, required this.navigatorKey});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      // ... 其它参数 ...
+    );
+  }
+}
+```
+
+- 这样可确保所有弹窗桥接方法都能在任意页面正常弹出，无需手动传递 context。
+- 该设置仅需在主工程入口配置一次，插件内部会自动复用。
+
 ## 📚 更多功能
 - 详见本仓库文档和示例项目。
 - 所有远程配置能力请参考 [flutter_remote_config 官方文档](https://github.com/gistpage/flutter_remote_config)。
