@@ -115,6 +115,10 @@ window.flutter_inappwebview.callHandler('googleLogin', {})
 - 用户操作：点击"Google登录"按钮时触发。
 - 成功反馈：弹出Google授权界面，用户完成授权后返回idToken，H5可用该Token进行后续登录。
 
+> **安全建议：**
+> - idToken 仅用于后端鉴权，建议通过 HTTPS 发送到服务端校验。
+> - 不要在H5端存储或暴露 idToken，防止被窃取。
+
 ### facebookLogin Facebook登录
 <a name="facebooklogin-facebook登录"></a>
 ```js
@@ -125,7 +129,11 @@ window.flutter_inappwebview.callHandler('facebookLogin', {})
 ```
 **典型场景说明：**
 - 用户操作：点击"Facebook登录"按钮时触发。
-- 成功反馈：弹出Facebook授权界面，用户完成授权后返回idToken，H5可用该Token进行后续登录。
+- 成功反馈：弹出Facebook授权界面，用户完成授权后返回idToken（即accessToken），H5可用该Token进行后续登录。
+
+> **安全建议：**
+> - idToken/accessToken 仅用于后端鉴权，建议通过 HTTPS 发送到服务端校验。
+> - 不要在H5端存储或暴露 Token，防止被窃取。
 
 ### getFcmToken 获取FCM Token
 <a name="getfcmtoken-获取fcm-token"></a>
@@ -162,12 +170,50 @@ window.flutter_inappwebview.callHandler('openWindow', { url: 'https://www.baidu.
 ### handleHtmlLink html a 超链接
 <a name="handlehtmllink-html-a-超链接"></a>
 ```js
-window.flutter_inappwebview.callHandler('handleHtmlLink', { url: 'https://www.baidu.com' })
-  .then(function(result) { /* ... */ });
+window.flutter_inappwebview.callHandler('handleHtmlLink', { url: 'https://www.baidu.com', scene: 'white' })
+  .then(function(result) {
+    // result: { handled, url }
+  });
 ```
 **典型场景说明：**
 - 用户操作：点击H5页面中的a标签超链接时触发（如需自定义跳转行为）。
 - 成功反馈：根据App端配置，可能在当前WebView或新窗口打开链接，或跳转到外部浏览器。
+
+**多分支业务场景说明：**
+| scene值   | handled返回值 | 典型业务场景         | H5端建议处理方式           |
+|-----------|--------------|----------------------|---------------------------|
+| white     | false        | 白名单，允许跳转     | H5可直接 window.location 跳转 |
+| black     | 'black'      | 黑名单，禁止跳转     | H5弹窗提示"禁止访问"      |
+| login     | 'login'      | 需登录，未登录拦截   | H5弹窗提示"请先登录"      |
+| app       | true         | App端已处理跳转/弹窗 | H5无需处理                |
+| h5        | false        | H5自行跳转           | H5可直接 window.location 跳转 |
+| 其它/默认 | false        | 默认允许             | H5可直接 window.location 跳转 |
+
+**H5端处理建议：**
+- 建议根据 handled 字段判断：
+  - `true`：App端已处理，无需H5再跳转。
+  - `false`：H5可自行跳转。
+  - `'black'`/`'login'`等字符串：H5弹窗提示对应业务信息。
+- 典型代码：
+```js
+window.flutter_inappwebview.callHandler('handleHtmlLink', { url, scene })
+  .then(function(result) {
+    if (result.handled === true) {
+      // App端已处理，无需H5处理
+    } else if (result.handled === 'black') {
+      alert('该链接已被禁止访问');
+    } else if (result.handled === 'login') {
+      alert('请先登录后再访问');
+    } else {
+      // 默认允许跳转
+      window.location.href = result.url;
+    }
+  });
+```
+
+> **区别说明：**
+> - `handleHtmlLink` 适合需要自定义跳转、业务拦截、登录校验等复杂场景。
+> - `window.open`/`<a target="_blank">` 适合简单外跳，自动用外部浏览器打开。
 
 ### window.alert/confirm/prompt 原生JS弹窗桥接
 <a name="windowalertconfirmprompt-原生js弹窗桥接"></a>

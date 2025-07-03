@@ -304,10 +304,29 @@ class JsBridgeManager {
       return result;
     });
     registerMethod('handleHtmlLink', (params) async {
-      print('[JSBridge] handleHtmlLink: params=$params');
-      final result = {'handled': true, 'url': params['url']};
-      print('[JSBridge] handleHtmlLink: result=$result');
-      return result;
+      final url = params['url']?.toString() ?? '';
+      final scene = params['scene']?.toString() ?? '';
+      // 业务分支模拟
+      if (scene == 'white') {
+        // 白名单，允许跳转（H5可自行跳转或App端跳转）
+        return {'handled': false, 'url': url}; // H5会自动跳转
+      } else if (scene == 'black') {
+        // 黑名单，弹窗拦截
+        // 返回 handled: 'black'，H5弹窗提示
+        return {'handled': 'black', 'url': url};
+      } else if (scene == 'login') {
+        // 需登录，弹窗提示
+        return {'handled': 'login', 'url': url};
+      } else if (scene == 'app') {
+        // App端已处理（如App端已跳转或弹窗），H5无需跳转
+        // 你可以在这里直接用 launchUrl 或 WebView 跳转（此处仅模拟）
+        return {'handled': true, 'url': url};
+      } else if (scene == 'h5') {
+        // App端未处理，H5自行跳转
+        return {'handled': false, 'url': url};
+      }
+      // 默认
+      return {'handled': false, 'url': url};
     });
   }
 

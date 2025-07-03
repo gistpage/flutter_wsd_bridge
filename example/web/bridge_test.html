@@ -183,9 +183,23 @@
     <button onclick="callHandleHtmlLink()">🔗 调用 handleHtmlLink</button>
     <div id="result-handleHtmlLink" class="result-box"></div>
     <button onclick="copyResult('result-handleHtmlLink')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+
+    <hr style="margin:24px 0;">
+    <div style="font-size:1em;color:#2575fc;margin-bottom:8px;">【高级场景模拟】a标签点击拦截 + handleHtmlLink</div>
+    <label>模拟业务场景：</label>
+    <select id="handleHtmlLinkScene">
+      <option value="white">白名单自动跳转</option>
+      <option value="black">黑名单拦截弹窗</option>
+      <option value="login">需登录弹窗</option>
+      <option value="app">App端已处理（H5不跳转）</option>
+      <option value="h5">App端未处理（H5自行跳转）</option>
+    </select>
+    <input id="handleHtmlLinkAUrl" value="https://www.example.com" style="margin-top:8px;" />
+    <a id="handleHtmlLinkATag" href="https://www.example.com" style="display:inline-block;margin:8px 0 0 0;color:#2575fc;text-decoration:underline;">点击模拟 a 标签</a>
+    <div id="result-handleHtmlLinkA" class="result-box"></div>
+    <div style="color:#888;font-size:0.95em;margin-top:8px;">说明：点击上方 a 标签会拦截并调用 handleHtmlLink，App端可根据 url/场景返回不同结果，H5根据返回值决定是否跳转/弹窗。</div>
   </div>
 
-  <div class="tip">⚡ <b>提示：</b>如需本地联调，请用 <b>http://localhost:8080/bridge_test.html</b> 作为 WebView 地址。</div>
 
   <!-- ========== 原生JS能力桥接测试 ========== -->
   <div class="section">
@@ -519,6 +533,38 @@
     document.getElementById('testALink').addEventListener('click', function() {
       document.getElementById('result-jsALink').innerHTML =
         `<span style='color:#2575fc;'>a标签已点击，目标: ${this.href}</span>`;
+    });
+
+    // handleHtmlLink 场景模拟
+    document.getElementById('handleHtmlLinkAUrl').addEventListener('input', function() {
+      document.getElementById('handleHtmlLinkATag').href = this.value;
+    });
+    document.getElementById('handleHtmlLinkATag').addEventListener('click', function(e) {
+      e.preventDefault();
+      var url = this.href;
+      var scene = document.getElementById('handleHtmlLinkScene').value;
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('handleHtmlLink', { url, scene })
+          .then(function(result) {
+            let msg = `[${new Date().toLocaleTimeString()}] handleHtmlLink 场景: ${scene}\nurl: ${url}\nApp端返回: ${JSON.stringify(result)}`;
+            document.getElementById('result-handleHtmlLinkA').innerHTML = `<span style='color:#2575fc;'>${msg.replace(/\n/g,'<br>')}</span>`;
+            // H5根据App端返回决定后续动作
+            if (result && result.data) {
+              if (result.data.handled === false) {
+                // App端未处理，H5自行跳转
+                window.location.href = url;
+              } else if (result.data.handled === 'login') {
+                alert('请先登录后再访问该链接！');
+              } else if (result.data.handled === 'black') {
+                alert('该链接已被拦截，禁止访问！');
+              } else if (result.data.handled === true) {
+                // App端已处理，无需H5跳转
+              }
+            }
+          });
+      } else {
+        alert('未检测到桥接环境，无法调用 handleHtmlLink');
+      }
     });
   </script>
 </body>
