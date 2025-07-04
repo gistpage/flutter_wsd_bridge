@@ -1,4 +1,5 @@
 name: flutter_wsd_bridge
+publish_to: none
 description: "Flutter package for WSD (Web Service Development) JavaScript bridge integration with WebView. Supports event tracking, SDK integration, and H5 hybrid functionality."
 version: 1.0.0
 
