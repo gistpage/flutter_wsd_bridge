@@ -37,13 +37,19 @@
 - 验收标准：H5页面可正常执行JS，UserAgent生效。
 
 ### 3A-6. 基础桥接方法实现 ⚠️
-**【部分实现】**
-- 已实现：
-  - `eventTracker`、`openWebView`、`openAndroid`、`closeWebView`、`getUseragent`、`googleLogin`、`facebookLogin`、`getFcmToken`、`alert`、`openWindow`、`handleHtmlLink` 等方法已在 `js_bridge_manager.dart` 注册，且有基础实现。
-- 未实现/不足：
-  1. `eventTracker` 目前仅打印参数并返回`tracked: true`，**未真正调用 `EventTrackerService` 实现端到端事件上报**。
-  2. `openWebView`、`openAndroid` 等方法已实现参数校验和分发，但**未见复杂场景（如多窗口、回调链路、异常处理）测试**。
-  3. **未见对所有注册方法的参数校验和错误处理的系统性测试**。
+**【已实现】**
+- `eventTracker`、`openWebView`、`openAndroid`、`closeWebView`、`getUseragent`、`googleLogin`、`facebookLogin`、`getFcmToken`、`alert`、`openWindow`、`handleHtmlLink` 等方法已在 `js_bridge_manager.dart` 注册，具备基础实现和参数校验。
+- 插件端只负责事件透传和参数校验，不负责归因/广告SDK的初始化和事件上报。
+- 端到端事件上报需由白包App开发者在原生层（Android/iOS）实现事件接收和SDK上报逻辑。
+- 这样设计的原因：
+  1. **灵活性**：每个渠道包/白包可根据自身需求灵活选择集成哪些SDK，参数和生命周期完全自控。
+  2. **安全性**：敏感参数（如App ID/Token）只在App本地配置，避免泄露风险。
+  3. **易维护**：插件升级、渠道包变更、SDK切换等都不会影响主流程，维护成本低。
+  4. **健壮性**：插件已实现Dart层空实现兜底，即使原生层未实现事件接收，事件会被安全忽略，App不会crash。
+
+**未实现/不足：**
+1. `openWebView`、`openAndroid` 等方法已实现参数校验和分发，但未见复杂场景（如多窗口、回调链路、异常处理）测试。
+2. 未见对所有注册方法的参数校验和错误处理的系统性测试。
 
 ---
 
@@ -86,7 +92,11 @@
 **【已实现】**
 - 插件已实现事件透传与Dart层空实现兜底，保证白包/多渠道包集成时不会crash，事件能安全传递到原生层。
 - **归因/广告SDK的集成、初始化和事件上报需由白包App开发者在原生层（Android/iOS）自行实现，插件不负责SDK的具体集成。**
-- 这样做更灵活、安全、易维护，渠道包可自由选择SDK且不会影响插件健壮性。
+- 这样设计的原因：
+  1. **灵活性**：每个渠道包/白包可根据自身需求灵活选择集成哪些SDK，参数和生命周期完全自控。
+  2. **安全性**：敏感参数（如App ID/Token）只在App本地配置，避免泄露风险。
+  3. **易维护**：插件升级、渠道包变更、SDK切换等都不会影响主流程，维护成本低。
+  4. **健壮性**：插件已实现Dart层空实现兜底，即使原生层未实现事件接收，事件会被安全忽略，App不会crash。
 - 详细集成说明见《Flutter插件集成与归因SDK配置指南.md》。
 
 **未实现/不足：**
