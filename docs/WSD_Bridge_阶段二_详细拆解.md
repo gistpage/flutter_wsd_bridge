@@ -82,14 +82,16 @@
   2. **部分事件参数模型未完全覆盖所有业务场景**（如自定义事件、扩展字段等）。
 
 ### 3B-6. 桥接与SDK服务打通 ⚠️
-**【部分实现】**
-- 已实现：
-  - `event_tracker_service.dart` 已实现事件分发到 Adjust/AppsFlyer，且有统一入口 `trackEvent`。
-  - `js_bridge_manager.dart` 已注册 `eventTracker` 方法。
-- 未实现/不足：
-  1. **`js_bridge_manager.dart` 的 `eventTracker` 方法未真正调用 `EventTrackerService().trackEvent`，仅做了参数打印和假数据返回**，未实现端到端打通。
-  2. **未见参数校验、错误回传、异步回调等健壮性处理**。
-  3. **未见H5端事件上报到原生SDK的全流程自动化测试**。
+
+**【已实现】**
+- 插件已实现事件透传与Dart层空实现兜底，保证白包/多渠道包集成时不会crash，事件能安全传递到原生层。
+- **归因/广告SDK的集成、初始化和事件上报需由白包App开发者在原生层（Android/iOS）自行实现，插件不负责SDK的具体集成。**
+- 这样做更灵活、安全、易维护，渠道包可自由选择SDK且不会影响插件健壮性。
+- 详细集成说明见《Flutter插件集成与归因SDK配置指南.md》。
+
+**未实现/不足：**
+- 原生层事件接收与SDK初始化需由白包App开发者自行实现，未实现时事件不会上报但不会导致异常。
+- 建议补充自动化测试，验证有/无SDK场景下的健壮性。
 
 ### 3B-7. UserAgent自定义实现 ✅
 **【已实现】已通过js_bridge_manager.dart实现getUseragent桥接方法，支持品牌、版本、UUID拼接，H5可通过JSBridge获取自定义UserAgent**
