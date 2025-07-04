@@ -39,7 +39,7 @@
 dependencies:
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main
 ```
 
@@ -144,7 +144,7 @@ CLI 工具自动处理：
 dependencies:
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main
   # 无需额外添加 flutter_remote_config，已包含在内
 ```
@@ -161,7 +161,7 @@ dependencies:
   # 可选：如果需要 WSD Bridge 的其他功能
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main
 ```
 
@@ -174,7 +174,7 @@ dependencies:
       ref: main  # 或指定具体 commit hash 确保版本一致性
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main
 ```
 
@@ -341,7 +341,7 @@ class MyApp extends StatelessWidget {
 dependencies:
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main  # 或指定版本标签，如 v1.0.0
 ```
 
@@ -359,7 +359,7 @@ flutter pub get
 dependencies:
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: v1.0.0  # 指定具体版本标签
 ```
 
@@ -369,7 +369,7 @@ dependencies:
 dependencies:
   flutter_wsd_bridge:
     git:
-      url: https://github.com/yourorg/flutter_wsd_bridge.git
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
       ref: main  # 跟随主分支
 ```
 
@@ -630,7 +630,7 @@ WSDWebView(
 
 如有问题，请通过以下方式联系：
 
-- 💬 Issues：[GitHub Issues](https://github.com/yourorg/flutter_wsd_bridge/issues)
+- 💬 Issues：[GitHub Issues](https://github.com/gistpage/flutter_wsd_bridge/issues)
 - 📚 文档：[完整开发指南](Flutter_Package_Development_Guide.md)
 - 🛠️ 实施方案：[详细实施计划](Flutter_Bridge_Implementation_Plan.md)
 - 📖 API 规范：[WSD API 文档](https://wsd-demo.netlify.app/docs/app-doc.html)
@@ -768,4 +768,69 @@ InAppWebView(
 本插件已自动初始化 Firebase（如 FCM 推送），无需在 main.dart 手动调用 Firebase.initializeApp()，除非有多实例或自定义参数需求。
 
 ---
+
+## 插件定位
+本插件专为Flutter白包App设计，支持H5事件透传、归因SDK桥接、三方登录、推送等能力。适用于需要灵活集成/切换归因SDK的白包开发者。
+
+## 快速集成
+1. 在`pubspec.yaml`中添加依赖：
+   ```yaml
+   dependencies:
+     flutter_wsd_bridge:
+       git:
+         url: https://github.com/gistpage/flutter_wsd_bridge.git
+         ref: main
+   ```
+2. 初始化与JSBridge注册：
+   ```dart
+   // main.dart
+   JsBridgeManager().registerDefaultMethods();
+   ```
+3. 事件透传说明：
+   - H5通过JSBridge调用`eventTracker`等方法，Flutter插件自动透传到原生层。
+   - 插件端只负责事件透传和参数校验，不负责SDK初始化和事件上报。
+
+## 远程配置（flutter_remote_config）
+本插件已集成 [flutter_remote_config](https://github.com/gistpage/flutter_remote_config) 作为远程配置解决方案。
+- 入口页面需用自动重定向组件包裹（详见[官方文档](https://github.com/gistpage/flutter_remote_config)）。
+- 配置变更需调用 refresh 或监听配置流。
+- Gist参数管理、常见问题排查等请参考[官方文档](https://github.com/gistpage/flutter_remote_config)。
+- 示例：
+  ```dart
+  await EasyRemoteConfig.init(...);
+  _configSub = EasyRemoteConfig.instance.configStateStream.listen((state) {
+    if (state.status == ConfigStatus.loaded) {
+      // 处理配置变更
+    }
+  });
+  ```
+
+## 责任边界
+- 插件只负责事件透传，归因/广告SDK集成与事件上报需白包开发者在原生层实现。
+- 详细集成方案请参考[白包集成指南](docs/白包接入指南/Flutter插件集成与归因SDK配置指南.md)。
+
+## 常见问题
+- 插件集成后如何实现事件上报？
+  > 需在原生层实现事件接收接口，并调用本地SDK进行上报，详见集成指南。
+- 原生层未实现事件接收会怎样？
+  > 插件已实现Dart层兜底，事件会被安全忽略，App不会crash。
+- 如何自定义事件参数？
+  > H5端可自定义参数，插件会原样透传到原生层。
+- 远程配置相关常见问题？
+  > 入口页面需用自动重定向组件包裹，配置变更需refresh或监听流，详见[flutter_remote_config官方文档](https://github.com/gistpage/flutter_remote_config)。
+
+## 安全与合规
+- 所有敏感数据必须加密传输，API/SDK通信必须HTTPS。
+- 敏感参数不得硬编码在Flutter层，需由原生层安全管理。
+- 权限声明、加密传输等安全细节请参考[加密与安全指引](https://wsd-demo.netlify.app/encryption)。
+
+## 相关文档
+- [Flutter插件集成与归因SDK配置指南](docs/白包接入指南/Flutter插件集成与归因SDK配置指南.md)
+- [Firebase三方登录与FCM一站式集成指引](docs/白包接入指南/Firebase_三方登录与FCM一站式集成指引.md)
+- [flutter_remote_config官方文档](https://github.com/gistpage/flutter_remote_config)
+- [加密与安全指引](https://wsd-demo.netlify.app/encryption)
+
+---
+
+如有问题请优先查阅上述文档，或通过Issue反馈。
 
