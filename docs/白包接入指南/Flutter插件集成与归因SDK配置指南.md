@@ -19,12 +19,18 @@
 
 ### 3.1. 在Flutter项目中添加插件依赖
 
-在`pubspec.yaml`中添加依赖：
+仅支持通过 GitHub 仓库方式引入本插件，不支持 pub.dev 依赖。
+
+在`pubspec.yaml`中添加如下依赖：
 
 ```yaml
 dependencies:
-  flutter_wsd_bridge: ^最新版本号
+  flutter_wsd_bridge:
+    git:
+      url: https://github.com/gistpage/flutter_wsd_bridge.git
+      ref: main # 或指定具体tag/commit
 ```
+> ⚠️ 仅支持通过 GitHub 仓库方式引入本插件，不支持 pub.dev 依赖。
 
 ### 3.2. 在原生层集成Adjust、AppsFlyer SDK
 
