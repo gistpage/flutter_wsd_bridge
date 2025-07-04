@@ -76,6 +76,73 @@
       .section, .tip, .env-status { max-width: 98vw; }
       .banner { padding: 24px 4vw 14px 4vw; }
     }
+    .accordion {
+      border: 1px solid #b3c6e6;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      background: #f8fafd;
+    }
+    .accordion-header {
+      cursor: pointer;
+      padding: 10px 12px;
+      font-weight: bold;
+      color: #2575fc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .accordion-arrow {
+      font-size: 1.1em;
+      transition: transform 0.2s;
+    }
+    .accordion-arrow.open {
+      transform: rotate(90deg);
+    }
+    .accordion-content {
+      display: none;
+      padding: 0 12px 12px 12px;
+    }
+    .accordion.open .accordion-content {
+      display: block;
+    }
+    .accordion-main {
+      border: 2px solid #b3c6e6;
+      border-radius: 14px;
+      margin: 28px auto 0 auto;
+      background: #fff;
+      max-width: 520px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border-left: 6px solid #6a11cb;
+      position: relative;
+    }
+    .accordion-main-header {
+      cursor: pointer;
+      padding: 18px 18px 18px 24px;
+      font-size: 1.25em;
+      font-weight: bold;
+      color: #2575fc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      border-radius: 14px 14px 0 0;
+      background: #f4f6fa;
+    }
+    .accordion-main-arrow {
+      font-size: 1.2em;
+      transition: transform 0.2s;
+    }
+    .accordion-main-arrow.open {
+      transform: rotate(90deg);
+    }
+    .accordion-main-content {
+      display: none;
+      padding: 0 18px 18px 18px;
+    }
+    .accordion-main.open .accordion-main-content {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -97,6 +164,10 @@
     <button onclick="callEventTracker()">🚀 调用 eventTracker</button>
     <div id="result-eventTracker" class="result-box"></div>
     <button onclick="copyResult('result-eventTracker')" style="margin-top:4px;background:#e6f7ff;color:#1890ff;">复制结果</button>
+
+    <hr style="margin:24px 0;">
+    <div style="font-size:1em;color:#2575fc;margin-bottom:8px;">【官方事件参数可编辑测试】</div>
+    <div id="eventTrackerOfficialTests"></div>
   </div>
 
   <div class="section">
@@ -566,6 +637,170 @@
         alert('未检测到桥接环境，无法调用 handleHtmlLink');
       }
     });
+
+    // 官方事件标准参数
+    const eventParams = {
+      firstOpen: {},
+      registerSubmit: { method: 'username' },
+      register: {
+        method: 'username',
+        customerId: 12345,
+        customerName: '张三',
+        mobileNum: '13800138000'
+      },
+      depositSubmit: {
+        customerName: '张三',
+        customerId: 12345,
+        revenue: '100',
+        value: '100',
+        af_revenue: 100
+      },
+      firstDeposit: {
+        customerName: '张三',
+        customerId: 12345,
+        revenue: '100',
+        value: '100',
+        af_revenue: 100
+      },
+      withdraw: {
+        customerName: '张三',
+        customerId: 12345,
+        amount: '-50',
+        value: '-50',
+        af_revenue: -50
+      },
+      firstDepositArrival: {
+        customerName: '张三',
+        customerId: 12345,
+        revenue: '100',
+        value: '100',
+        af_revenue: 100
+      },
+      deposit: {
+        customerName: '张三',
+        customerId: 12345,
+        revenue: '100',
+        value: '100',
+        af_revenue: 100
+      }
+    };
+
+    // 12个事件名（如需扩展可在此补充）
+    const officialEvents = [
+      'firstOpen',
+      'registerSubmit',
+      'register',
+      'depositSubmit',
+      'firstDeposit',
+      'withdraw',
+      'firstDepositArrival',
+      'deposit',
+      'openWebView',
+      'openAndroid',
+      'closeWebView',
+      'getUseragent'
+    ];
+    const container = document.getElementById('eventTrackerOfficialTests');
+    officialEvents.forEach(eventName => {
+      const paramStr = JSON.stringify(eventParams[eventName] || {}, null, 2);
+      const html = `
+        <div class="accordion" id="accordion-${eventName}">
+          <div class="accordion-header" onclick="toggleAccordion('${eventName}')">
+            <span>${eventName}</span>
+            <span class="accordion-arrow" id="arrow-${eventName}">▶</span>
+          </div>
+          <div class="accordion-content">
+            <div style="margin-top:6px;">
+              <label style="font-weight:500;">eventValue (JSON):</label>
+              <textarea id="officialEventValue_${eventName}" style="width:100%;min-height:48px;">${paramStr}</textarea>
+            </div>
+            <div style="margin-top:6px;display:flex;gap:8px;">
+              <button onclick="resetOfficialEventValue('${eventName}')" style="background:#e6f7ff;color:#1890ff;">重置为标准参数</button>
+              <button onclick="testOfficialEventEditable('${eventName}')">测试</button>
+            </div>
+            <div id="result-officialEvent-${eventName}" class="result-box" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    });
+
+    function toggleAccordion(eventName) {
+      const acc = document.getElementById('accordion-' + eventName);
+      const arrow = document.getElementById('arrow-' + eventName);
+      if (acc.classList.contains('open')) {
+        acc.classList.remove('open');
+        arrow.classList.remove('open');
+      } else {
+        acc.classList.add('open');
+        arrow.classList.add('open');
+      }
+    }
+    function resetOfficialEventValue(eventName) {
+      document.getElementById('officialEventValue_' + eventName).value = JSON.stringify(eventParams[eventName] || {}, null, 2);
+    }
+    function testOfficialEventEditable(eventName) {
+      if (!checkBridgeEnv()) {
+        showResult('result-officialEvent-' + eventName, 'eventTracker', {}, '[未检测到桥接环境]');
+        return;
+      }
+      let eventValueStr = document.getElementById('officialEventValue_' + eventName).value;
+      let eventValue = safeParse(eventValueStr);
+      if (eventValue === null) return;
+      window.flutter_inappwebview.callHandler('eventTracker', { eventName, eventValue })
+        .then(function(result) {
+          showResult('result-officialEvent-' + eventName, 'eventTracker', { eventName, eventValue }, result);
+        })
+        .catch(function(err) {
+          showResult('result-officialEvent-' + eventName, 'eventTracker', { eventName, eventValue }, '[异常] ' + err);
+        });
+    }
+
+    // 渲染所有一级功能区为折叠面板
+    document.addEventListener('DOMContentLoaded', function() {
+      const sectionTitles = [
+        '1. eventTracker 测试',
+        '2. openWebView 测试',
+        '3. openAndroid 测试',
+        '4. closeWebView 测试',
+        '5. getUseragent 测试',
+        '6. googleLogin 测试',
+        '7. facebookLogin 测试',
+        '8. getFcmToken 测试',
+        '9. alert 测试',
+        '10. openWindow 测试',
+        '11. handleHtmlLink 测试',
+        '12. 原生JS能力桥接测试'
+      ];
+      const allSections = Array.from(document.querySelectorAll('.section'));
+      allSections.forEach((section, idx) => {
+        const title = sectionTitles[idx] || `功能区${idx+1}`;
+        const content = section.innerHTML;
+        const html = `
+          <div class="accordion-main" id="main-accordion-${idx}">
+            <div class="accordion-main-header" onclick="toggleMainAccordion(${idx})">
+              <span>${title}</span>
+              <span class="accordion-main-arrow" id="main-arrow-${idx}">▶</span>
+            </div>
+            <div class="accordion-main-content">
+              ${content}
+            </div>
+          </div>
+        `;
+        section.outerHTML = html;
+      });
+    });
+    function toggleMainAccordion(idx) {
+      const acc = document.getElementById('main-accordion-' + idx);
+      const arrow = document.getElementById('main-arrow-' + idx);
+      if (acc.classList.contains('open')) {
+        acc.classList.remove('open');
+        arrow.classList.remove('open');
+      } else {
+        acc.classList.add('open');
+        arrow.classList.add('open');
+      }
+    }
   </script>
 </body>
 </html> 

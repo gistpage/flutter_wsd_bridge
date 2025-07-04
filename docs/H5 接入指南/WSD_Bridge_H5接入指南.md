@@ -44,17 +44,192 @@ if (window.flutter_inappwebview && typeof window.flutter_inappwebview.callHandle
 
 ### eventTracker 事件追踪
 <a name="eventtracker-事件追踪"></a>
+
+#### 事件追踪（eventTracker）参数与调用规范
+
+> **事件上报后端说明：**
+> - 所有事件会自动同步到 Adjust、AppsFlyer 等第三方埋点平台。
+> - **当前已集成的 SDK：**
+>   1. Adjust（第三方归因与效果分析平台）
+>   2. AppsFlyer（第三方归因与效果分析平台）
+> - 事件参数、格式、必填项等均由 App 端统一适配，无需 H5 端做特殊处理。
+> - 若需联调或验证埋点，请联系App开发同学协助抓包或查日志。
+
+> **常见问题与调试建议：**
+> - eventName 拼写错误或参数缺失，事件不会被上报。
+> - eventValue 必须为对象，且字段类型需与上表一致。
+> - 建议在开发环境下用调试工具（如 Charles、App 日志）验证事件是否成功上报。
+> - 如需扩展自定义事件，请先与App端开发同学确认支持。 
+
+> **参数传递特别说明：**
+> - 通过 `window.flutter_inappwebview.callHandler` 调用桥接方法时，参数 `eventValue` 直接传 JS 对象即可，无需 `JSON.stringify`。Dart 层会自动处理对象类型。
+> - **如误用 `JSON.stringify`，会导致参数类型错误，事件上报失败。**
+> - 示例：
+>   ```js
+>   window.flutter_inappwebview.callHandler('eventTracker', {
+>     eventName: 'depositSubmit',
+>     eventValue: {
+>       customerName: '张三',
+>       customerId: 12345,
+>       revenue: '100',
+>       value: '100',
+>       af_revenue: 100
+>     }
+>   });
+>   ```
+
+### 1. firstOpen
+- **说明**：用户首次开启App
+- **参数**：无
+- **调用示例**：
 ```js
 window.flutter_inappwebview.callHandler('eventTracker', {
-  eventName: 'page_view',
-  eventValue: { foo: 'bar', timestamp: Date.now() }
-}).then(function(result) {
-  // result: {code, data, msg}
+  eventName: 'firstOpen',
+  eventValue: {}
 });
 ```
-**典型场景说明：**
-- 用户操作：页面加载、按钮点击、表单提交等行为后，H5页面调用该方法上报事件。
-- 成功反馈：一般无界面变化，事件数据会被App端采集用于埋点分析。可在调试时通过App日志或后台埋点平台验证是否上报成功。
+
+### 2. registerSubmit
+- **说明**：用户提交注册
+- **参数表**：
+
+| 字段名   | 类型   | 必填 | 说明           |
+|----------|--------|------|----------------|
+| method   |string  | 是   | 注册方式（username/sms）|
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'registerSubmit',
+  eventValue: { method: 'username' }
+});
+```
+
+### 3. register
+- **说明**：用户注册成功
+- **参数表**：
+
+| 字段名       | 类型   | 必填 | 说明           |
+|--------------|--------|------|----------------|
+| method       |string  | 是   | 注册方式（username/sms）|
+| customerId   |number  | 是   | 用户ID         |
+| customerName |string  | 是   | 用户名         |
+| mobileNum    |string  | 是   | 手机号         |
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'register',
+  eventValue: {
+    method: 'username',
+    customerId: 12345,
+    customerName: '张三',
+    mobileNum: '13800138000'
+  }
+});
+```
+
+### 4. depositSubmit
+- **说明**：用户提交充值
+- **参数表**：
+
+| 字段名       | 类型   | 必填 | 说明           |
+|--------------|--------|------|----------------|
+| customerName |string  | 是   | 用户名         |
+| customerId   |number  | 是   | 用户ID         |
+| revenue      |string  | 是   | 金额           |
+| value        |string  | 是   | 金额           |
+| af_revenue   |number  | 是   | 金额（数字型） |
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'depositSubmit',
+  eventValue: {
+    customerName: '张三',
+    customerId: 12345,
+    revenue: '100',
+    value: '100',
+    af_revenue: 100
+  }
+});
+```
+
+### 5. firstDeposit
+- **说明**：用户首充
+- **参数表**：同 depositSubmit
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'firstDeposit',
+  eventValue: {
+    customerName: '张三',
+    customerId: 12345,
+    revenue: '100',
+    value: '100',
+    af_revenue: 100
+  }
+});
+```
+
+### 6. withdraw
+- **说明**：用户提现到账
+- **参数表**：
+
+| 字段名       | 类型   | 必填 | 说明           |
+|--------------|--------|------|----------------|
+| customerName |string  | 是   | 用户名         |
+| customerId   |number  | 是   | 用户ID         |
+| amount       |string  | 是   | 金额           |
+| value        |string  | 是   | 金额           |
+| af_revenue   |number  | 是   | 金额（负数）   |
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'withdraw',
+  eventValue: {
+    customerName: '张三',
+    customerId: 12345,
+    amount: '-50',
+    value: '-50',
+    af_revenue: -50
+  }
+});
+```
+
+### 7. firstDepositArrival
+- **说明**：用户首充到账
+- **参数表**：同 depositSubmit
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'firstDepositArrival',
+  eventValue: {
+    customerName: '张三',
+    customerId: 12345,
+    revenue: '100',
+    value: '100',
+    af_revenue: 100
+  }
+});
+```
+
+### 8. deposit
+- **说明**：用户充值到账
+- **参数表**：同 depositSubmit
+- **调用示例**：
+```js
+window.flutter_inappwebview.callHandler('eventTracker', {
+  eventName: 'deposit',
+  eventValue: {
+    customerName: '张三',
+    customerId: 12345,
+    revenue: '100',
+    value: '100',
+    af_revenue: 100
+  }
+});
+```
+
+---
+
 
 ### openWebView 打开新页面
 <a name="openwebview-打开新页面"></a>
@@ -195,9 +370,9 @@ window.flutter_inappwebview.callHandler('handleHtmlLink', { url: 'https://www.ba
 
 **H5端处理建议：**
 - 建议根据 handled 字段判断：
-  - `true`：App端已处理，无需H5再跳转。
-  - `false`：H5可自行跳转。
-  - `'black'`/`'login'`等字符串：H5弹窗提示对应业务信息。
+  - `true`：App端已处理，无需H5处理
+  - `false`：H5可自行跳转
+  - `'black'`/`'login'`等字符串：H5弹窗提示对应业务信息
 - 典型代码：
 ```js
 window.flutter_inappwebview.callHandler('handleHtmlLink', { url, scene })
@@ -216,8 +391,8 @@ window.flutter_inappwebview.callHandler('handleHtmlLink', { url, scene })
 ```
 
 > **区别说明：**
-> - `handleHtmlLink` 适合需要自定义跳转、业务拦截、登录校验等复杂场景。
-> - `window.open`/`<a target="_blank">` 适合简单外跳，自动用外部浏览器打开。
+> - `handleHtmlLink` 适合需要自定义跳转、业务拦截、登录校验等复杂场景
+> - `window.open`/`<a target="_blank">` 适合简单外跳，自动用外部浏览器打开
 
 ### window.alert/confirm/prompt 原生JS弹窗桥接
 <a name="windowalertconfirmprompt-原生js弹窗桥接"></a>
